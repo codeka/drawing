@@ -2,6 +2,7 @@ import {
   afterNextRender,
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   ElementRef,
   inject,
@@ -30,6 +31,22 @@ export class DrawingCanvas {
   private readonly tools = createToolMap();
   private activePointerId: number | null = null;
   private previousTool: ToolId | null = null;
+
+  readonly brushPreview = computed(() => {
+    const tool = this.editorState.activeTool();
+    const pos = this.editorState.cursorPos();
+    if (!pos || (tool !== 'pencil' && tool !== 'eraser')) {
+      return null;
+    }
+    const size =
+      tool === 'pencil' ? this.editorState.pencilSize() : this.editorState.eraserSize();
+    const half = Math.floor(size / 2);
+    return {
+      left: pos.x - half,
+      top: pos.y - half,
+      size,
+    };
+  });
 
   constructor() {
     afterNextRender(() => {
@@ -151,6 +168,8 @@ export class DrawingCanvas {
       width: this.editorState.canvasWidth(),
       height: this.editorState.canvasHeight(),
       color: this.editorState.foregroundColor(),
+      pencilSize: this.editorState.pencilSize(),
+      eraserSize: this.editorState.eraserSize(),
       getTextDraft: () => this.editorState.activeTextDraft(),
       setTextDraft: (draft) => this.editorState.activeTextDraft.set(draft),
       commitTextDraft: () => this.canvasDoc.commitActiveEdit(),

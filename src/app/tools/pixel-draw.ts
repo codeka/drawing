@@ -1,14 +1,22 @@
 import { Point } from '../models/tool.model';
 
+export interface DiskSpan {
+  readonly dy: number;
+  readonly xStart: number;
+  readonly width: number;
+}
+
+const diskSpanCache = new Map<number, readonly DiskSpan[]>();
+
 /**
  * Generates integer pixel coordinates along a line from (x0, y0) to (x1, y1)
  * using Bresenham's algorithm so fast strokes never leave gaps.
  */
 export function rasterizeLinePoints(x0: number, y0: number, x1: number, y1: number): Point[] {
-  let cx = Math.round(x0);
-  let cy = Math.round(y0);
-  const tx = Math.round(x1);
-  const ty = Math.round(y1);
+  let cx = Math.floor(x0);
+  let cy = Math.floor(y0);
+  const tx = Math.floor(x1);
+  const ty = Math.floor(y1);
 
   const points: Point[] = [];
   const dx = Math.abs(tx - cx);
@@ -36,23 +44,69 @@ export function rasterizeLinePoints(x0: number, y0: number, x1: number, y1: numb
   return points;
 }
 
-function stampAlongLine(
+/**
+ * Returns horizontal run spans for a crisp, un-antialiased circular disk of diameter `size`.
+ * The disk spans [cx - floor(size / 2), cx - floor(size / 2) + size) in both axes.
+ */
+export function getDiskSpans(size: number): readonly DiskSpan[] {
+  const s = Math.max(1, Math.round(size));
+  const cached = diskSpanCache.get(s);
+  if (cached) {
+    return cached;
+  }
+
+  const half = Math.floor(s / 2);
+  const r = s / 2;
+  const r2 = r * r;
+  const spans: DiskSpan[] = [];
+
+  for (let oy = 0; oy < s; oy++) {
+    const dyCenter = oy + 0.5 - r;
+    let runStart = -1;
+    let runEnd = -1;
+
+    for (let ox = 0; ox < s; ox++) {
+      const dxCenter = ox + 0.5 - r;
+      if (dxCenter * dxCenter + dyCenter * dyCenter <= r2) {
+        if (runStart === -1) {
+          runStart = ox;
+        }
+        runEnd = ox;
+      }
+    }
+
+    if (runStart !== -1) {
+      spans.push({
+        dy: oy - half,
+        xStart: runStart - half,
+        width: runEnd - runStart + 1,
+      });
+    }
+  }
+
+  diskSpanCache.set(s, spans);
+  return spans;
+}
+
+function stampCircleAlongLine(
   from: Point,
   to: Point,
   size: number,
-  applyStamp: (x: number, y: number, stampSize: number) => void,
+  applySpan: (x: number, y: number, width: number) => void,
 ): void {
-  const half = Math.floor(size / 2);
+  const spans = getDiskSpans(size);
   for (const pt of rasterizeLinePoints(from.x, from.y, to.x, to.y)) {
-    applyStamp(pt.x - half, pt.y - half, size);
+    for (const span of spans) {
+      applySpan(pt.x + span.xStart, pt.y + span.dy, span.width);
+    }
   }
 }
 
 /**
- * Draws crisp, un-antialiased square pixel stamps between two points so Flood Fill
+ * Draws crisp, un-antialiased circular pixel stamps between two points so Flood Fill
  * does not encounter fuzzy edge artifacts.
  */
-export function drawSquareStampLine(
+export function drawCircleStampLine(
   ctx: CanvasRenderingContext2D,
   from: Point,
   to: Point,
@@ -60,17 +114,17 @@ export function drawSquareStampLine(
   color: string,
 ): void {
   ctx.fillStyle = color;
-  stampAlongLine(from, to, size, (x, y, s) => ctx.fillRect(x, y, s, s));
+  stampCircleAlongLine(from, to, size, (x, y, width) => ctx.fillRect(x, y, width, 1));
 }
 
 /**
- * Clears square pixel regions along a line back to full transparency (alpha = 0).
+ * Clears circular pixel regions along a line back to full transparency (alpha = 0).
  */
-export function eraseSquareStampLine(
+export function eraseCircleStampLine(
   ctx: CanvasRenderingContext2D,
   from: Point,
   to: Point,
   size: number,
 ): void {
-  stampAlongLine(from, to, size, (x, y, s) => ctx.clearRect(x, y, s, s));
+  stampCircleAlongLine(from, to, size, (x, y, width) => ctx.clearRect(x, y, width, 1));
 }

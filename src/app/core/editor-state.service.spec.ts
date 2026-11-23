@@ -1,5 +1,12 @@
 import { TestBed } from '@angular/core/testing';
-import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH } from '../models/tool.model';
+import {
+  DEFAULT_CANVAS_HEIGHT,
+  DEFAULT_CANVAS_WIDTH,
+  DEFAULT_ERASER_SIZE,
+  DEFAULT_PENCIL_SIZE,
+  MAX_BRUSH_SIZE,
+  MIN_BRUSH_SIZE,
+} from '../models/tool.model';
 import { EditorStateService } from './editor-state.service';
 
 describe('EditorStateService', () => {
@@ -10,10 +17,12 @@ describe('EditorStateService', () => {
     service = TestBed.inject(EditorStateService);
   });
 
-  it('initializes with 1280x1024 transparent defaults, pencil tool, and black color', () => {
+  it('initializes with 1280x1024 defaults, pencil tool (1px), eraser (10px), and black color', () => {
     expect(service.canvasWidth()).toBe(DEFAULT_CANVAS_WIDTH);
     expect(service.canvasHeight()).toBe(DEFAULT_CANVAS_HEIGHT);
     expect(service.activeTool()).toBe('pencil');
+    expect(service.pencilSize()).toBe(DEFAULT_PENCIL_SIZE);
+    expect(service.eraserSize()).toBe(DEFAULT_ERASER_SIZE);
     expect(service.foregroundColor()).toBe('#000000');
     expect(service.fileName()).toBe('untitled.png');
     expect(service.activeTextDraft()).toBeNull();
@@ -32,5 +41,27 @@ describe('EditorStateService', () => {
 
     expect(service.foregroundColor()).toBe('#ed1c24');
     expect(service.activeTextDraft()?.color).toBe('#ed1c24');
+  });
+
+  it('clamps pencil and eraser sizes independently and ignores non-finite values', () => {
+    service.setPencilSize(0);
+    expect(service.pencilSize()).toBe(MIN_BRUSH_SIZE);
+
+    service.setPencilSize(999);
+    expect(service.pencilSize()).toBe(MAX_BRUSH_SIZE);
+
+    service.setPencilSize(14.6);
+    expect(service.pencilSize()).toBe(15);
+
+    service.setPencilSize(Number.NaN);
+    expect(service.pencilSize()).toBe(15);
+    expect(service.eraserSize()).toBe(DEFAULT_ERASER_SIZE);
+
+    service.setEraserSize(25);
+    expect(service.eraserSize()).toBe(25);
+    expect(service.pencilSize()).toBe(15);
+
+    service.setEraserSize(-5);
+    expect(service.eraserSize()).toBe(MIN_BRUSH_SIZE);
   });
 });

@@ -15,6 +15,18 @@
       (pointerleave)="onPointerLeave()"
     ></canvas>
 
+    @if (brushPreview(); as preview) {
+      <div class="brush-cursor-layer" aria-hidden="true">
+        <div
+          class="brush-cursor"
+          [style.left.px]="preview.left"
+          [style.top.px]="preview.top"
+          [style.width.px]="preview.size"
+          [style.height.px]="preview.size"
+        ></div>
+      </div>
+    }
+
     @if (editorState.textSelectionPreview(); as preview) {
       <div
         class="text-preview-box"

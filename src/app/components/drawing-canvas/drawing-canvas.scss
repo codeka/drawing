@@ -36,6 +36,22 @@
   touch-action: none;
 }
 
+.brush-cursor-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.brush-cursor {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.85),
+    0 0 0 2px rgba(255, 255, 255, 0.85);
+}
+
 .text-preview-box {
   position: absolute;
   border: 1px dashed var(--accent);

@@ -5,6 +5,8 @@ export interface ToolContext {
   readonly width: number;
   readonly height: number;
   readonly color: string;
+  readonly pencilSize: number;
+  readonly eraserSize: number;
   getTextDraft(): TextDraft | null;
   setTextDraft(draft: TextDraft | null): void;
   commitTextDraft(): void;

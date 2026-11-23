@@ -35,10 +35,16 @@ export const DEFAULT_CANVAS_HEIGHT = 1024;
 export const DEFAULT_TEXT_FONT_FAMILY = 'Segoe UI, Arial, sans-serif';
 export const DEFAULT_TEXT_FONT_SIZE = 24;
 
+export const MIN_BRUSH_SIZE = 1;
+export const MAX_BRUSH_SIZE = 200;
+export const SLIDER_MAX_BRUSH_SIZE = 100;
+export const DEFAULT_PENCIL_SIZE = 8;
+export const DEFAULT_ERASER_SIZE = 10;
+
 export const TOOL_DEFINITIONS: readonly ToolDefinition[] = [
   { id: 'pencil', label: 'Pencil', mode: 'direct', shortcut: 'P', cursor: 'crosshair' },
   { id: 'fill', label: 'Fill', mode: 'direct', shortcut: 'F', cursor: 'crosshair' },
-  { id: 'eraser', label: 'Eraser', mode: 'direct', shortcut: 'E', cursor: 'cell' },
+  { id: 'eraser', label: 'Eraser', mode: 'direct', shortcut: 'E', cursor: 'crosshair' },
   { id: 'text', label: 'Text', mode: 'staged', shortcut: 'T', cursor: 'text' },
 ];
 

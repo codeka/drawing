@@ -77,17 +77,53 @@
 
   <div class="toolbar-divider" aria-hidden="true"></div>
 
+  <ng-template #sizeOption let-tool="tool" let-size="size">
+    <div class="size-option">
+      <label class="option-label" for="brush-size-input">Size</label>
+      <input
+        type="range"
+        class="size-slider"
+        [min]="minBrushSize"
+        [max]="sliderMaxBrushSize"
+        step="1"
+        [value]="sliderValue(size)"
+        (input)="onSizeSliderInput(tool, $event)"
+        aria-label="Brush size slider"
+      />
+      <div class="size-input-wrap">
+        <input
+          id="brush-size-input"
+          type="number"
+          class="size-number-input"
+          [min]="minBrushSize"
+          [max]="maxBrushSize"
+          step="1"
+          [value]="size"
+          (input)="onSizeTextInput(tool, $event)"
+          (blur)="onSizeTextCommit(tool, $event)"
+          (keydown.enter)="onSizeTextCommit(tool, $event)"
+          aria-label="Brush size in pixels"
+        />
+        <span class="size-unit">px</span>
+      </div>
+    </div>
+  </ng-template>
+
   <div class="toolbar-group options-group">
     <div class="group-content">
       @switch (editorState.activeTool()) {
         @case ('pencil') {
-          <span class="options-empty">No options yet</span>
+          <ng-container
+            *ngTemplateOutlet="sizeOption; context: { tool: 'pencil', size: editorState.pencilSize() }"
+          />
         }
         @case ('fill') {
           <span class="options-empty">No options yet</span>
         }
         @case ('eraser') {
-          <span class="options-empty">No options yet</span>
+          <ng-container
+            *ngTemplateOutlet="sizeOption; context: { tool: 'eraser', size: editorState.eraserSize() }"
+          />
         }
         @case ('text') {
           <span class="options-empty">No options yet</span>

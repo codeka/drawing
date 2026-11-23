@@ -1,8 +1,6 @@
 import { getToolDefinition, Point } from '../models/tool.model';
 import { DrawingTool, ToolContext } from './drawing-tool';
-import { drawSquareStampLine } from './pixel-draw';
-
-const PENCIL_SIZE = 2;
+import { drawCircleStampLine } from './pixel-draw';
 
 export class PencilTool implements DrawingTool {
   readonly definition = getToolDefinition('pencil');
@@ -12,20 +10,20 @@ export class PencilTool implements DrawingTool {
   onPointerDown(point: Point, toolCtx: ToolContext): void {
     this.isDrawing = true;
     this.lastPoint = point;
-    drawSquareStampLine(toolCtx.ctx, point, point, PENCIL_SIZE, toolCtx.color);
+    drawCircleStampLine(toolCtx.ctx, point, point, toolCtx.pencilSize, toolCtx.color);
   }
 
   onPointerMove(point: Point, toolCtx: ToolContext): void {
     if (!this.isDrawing || !this.lastPoint) {
       return;
     }
-    drawSquareStampLine(toolCtx.ctx, this.lastPoint, point, PENCIL_SIZE, toolCtx.color);
+    drawCircleStampLine(toolCtx.ctx, this.lastPoint, point, toolCtx.pencilSize, toolCtx.color);
     this.lastPoint = point;
   }
 
   onPointerUp(point: Point, toolCtx: ToolContext): void {
     if (this.isDrawing && this.lastPoint) {
-      drawSquareStampLine(toolCtx.ctx, this.lastPoint, point, PENCIL_SIZE, toolCtx.color);
+      drawCircleStampLine(toolCtx.ctx, this.lastPoint, point, toolCtx.pencilSize, toolCtx.color);
     }
     this.isDrawing = false;
     this.lastPoint = null;
