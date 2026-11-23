@@ -1,0 +1,135 @@
+<section class="toolbar" aria-label="Drawing toolbar">
+  <div class="toolbar-group">
+    <div class="group-content">
+      <div class="tool-grid" role="group" aria-label="Tools">
+        @for (tool of tools; track tool.id) {
+          <button
+            type="button"
+            class="tool-btn"
+            [class.active]="editorState.activeTool() === tool.id"
+            [attr.aria-pressed]="editorState.activeTool() === tool.id"
+            [attr.aria-label]="tool.label"
+            [title]="tool.label + ' (' + tool.shortcut + ')'"
+            (click)="selectTool(tool.id)"
+          >
+            @switch (tool.id) {
+              @case ('pencil') {
+                <svg class="tool-icon" viewBox="0 0 16 16" aria-hidden="true">
+                  <path
+                    d="M11.8 1.7a1.2 1.2 0 0 1 1.7 0l.8.8a1.2 1.2 0 0 1 0 1.7L5.6 12.9l-3.4.9.9-3.4 8.7-8.7Z"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.35"
+                    stroke-linejoin="round"
+                  />
+                  <path d="m9.9 3.6 2.5 2.5" stroke="currentColor" stroke-width="1.2" />
+                </svg>
+              }
+              @case ('fill') {
+                <svg class="tool-icon" viewBox="0 0 16 16" aria-hidden="true">
+                  <path
+                    d="M3.2 7.8 7.8 3.2l4.4 4.4-4.6 4.6a1.4 1.4 0 0 1-2 0L3.2 9.8a1.4 1.4 0 0 1 0-2Z"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.3"
+                    stroke-linejoin="round"
+                  />
+                  <path d="M5.2 5.2 3.3 2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+                  <path
+                    d="M13 10.6c.8 1.1 1.2 1.8 1.2 2.4a1.2 1.2 0 0 1-2.4 0c0-.6.4-1.3 1.2-2.4Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              }
+              @case ('eraser') {
+                <svg class="tool-icon" viewBox="0 0 16 16" aria-hidden="true">
+                  <path
+                    d="M6.5 13.2h6.8M3.3 9.7l5.6-5.7a1.2 1.2 0 0 1 1.7 0l2.6 2.6a1.2 1.2 0 0 1 0 1.7l-4.9 4.9H5.1L3.3 11.4a1.2 1.2 0 0 1 0-1.7Z"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.3"
+                    stroke-linejoin="round"
+                    stroke-linecap="round"
+                  />
+                  <path d="m6.1 6.9 4.2 4.2" stroke="currentColor" stroke-width="1.2" />
+                </svg>
+              }
+              @case ('text') {
+                <svg class="tool-icon" viewBox="0 0 16 16" aria-hidden="true">
+                  <path
+                    d="M3.5 13 7.3 3h1.4l3.8 10M5 9.8h6"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.45"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              }
+            }
+            <span class="tool-label">{{ tool.label }}</span>
+          </button>
+        }
+      </div>
+    </div>
+    <span class="group-label">Tools</span>
+  </div>
+
+  <div class="toolbar-divider" aria-hidden="true"></div>
+
+  <div class="toolbar-group options-group">
+    <div class="group-content">
+      @switch (editorState.activeTool()) {
+        @case ('pencil') {
+          <span class="options-empty">No options yet</span>
+        }
+        @case ('fill') {
+          <span class="options-empty">No options yet</span>
+        }
+        @case ('eraser') {
+          <span class="options-empty">No options yet</span>
+        }
+        @case ('text') {
+          <span class="options-empty">No options yet</span>
+        }
+      }
+    </div>
+    <span class="group-label">{{ editorState.activeToolDef().label }} Options</span>
+  </div>
+
+  <div class="toolbar-divider" aria-hidden="true"></div>
+
+  <div class="toolbar-group colors-group">
+    <div class="group-content">
+      <div class="color-controls">
+        <label class="active-color-picker" title="Custom color">
+          <span class="active-swatch" [style.background-color]="editorState.foregroundColor()"></span>
+          <input
+            type="color"
+            class="color-native-input"
+            [value]="editorState.foregroundColor()"
+            (input)="onColorInput($event)"
+            aria-label="Custom foreground color"
+          />
+        </label>
+
+        <div class="color-grid" role="group" aria-label="Preset colors">
+          @for (color of presetColors; track color) {
+            <button
+              type="button"
+              class="color-swatch"
+              [class.active]="editorState.foregroundColor().toLowerCase() === color.toLowerCase()"
+              [style.background-color]="color"
+              [attr.aria-label]="'Select color ' + color"
+              [title]="color"
+              (click)="selectColor(color)"
+            ></button>
+          }
+        </div>
+      </div>
+    </div>
+    <span class="group-label">Colors</span>
+  </div>
+
+  <div class="toolbar-divider" aria-hidden="true"></div>
+</section>

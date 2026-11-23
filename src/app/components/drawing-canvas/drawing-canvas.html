@@ -1,0 +1,39 @@
+<main class="workspace">
+  <div
+    class="canvas-stage"
+    [style.width.px]="editorState.canvasWidth()"
+    [style.height.px]="editorState.canvasHeight()"
+  >
+    <canvas
+      #drawCanvas
+      class="draw-canvas"
+      [style.cursor]="editorState.activeToolDef().cursor"
+      (pointerdown)="onPointerDown($event)"
+      (pointermove)="onPointerMove($event)"
+      (pointerup)="onPointerUp($event)"
+      (pointercancel)="onPointerUp($event)"
+      (pointerleave)="onPointerLeave()"
+    ></canvas>
+
+    @if (editorState.textSelectionPreview(); as preview) {
+      <div
+        class="text-preview-box"
+        [style.left.px]="preview.x"
+        [style.top.px]="preview.y"
+        [style.width.px]="preview.width"
+        [style.height.px]="preview.height"
+      ></div>
+    }
+
+    @if (editorState.activeTextDraft(); as draft) {
+      <app-text-overlay
+        [draft]="draft"
+        [canvasWidth]="editorState.canvasWidth()"
+        [canvasHeight]="editorState.canvasHeight()"
+        (draftChange)="editorState.updateTextDraft($event)"
+        (commit)="canvasDoc.commitActiveEdit()"
+        (cancel)="canvasDoc.cancelActiveEdit()"
+      />
+    }
+  </div>
+</main>

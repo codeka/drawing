@@ -1,0 +1,63 @@
+<div
+  class="text-overlay"
+  [style.left.px]="draft().rect.x"
+  [style.top.px]="draft().rect.y"
+  [style.width.px]="draft().rect.width"
+  [style.height.px]="draft().rect.height"
+  (pointerdown)="onOverlayPointerDown($event)"
+>
+  <div
+    class="drag-bar"
+    title="Drag to move text box"
+    (pointerdown)="onDragBarPointerDown($event)"
+    (pointermove)="onInteractionPointerMove($event)"
+    (pointerup)="onInteractionPointerUp($event)"
+    (pointercancel)="onInteractionPointerUp($event)"
+  >
+    <span class="drag-grip" aria-hidden="true"></span>
+  </div>
+
+  <textarea
+    #textInput
+    class="text-input"
+    [value]="draft().text"
+    [style.font-family]="draft().fontFamily"
+    [style.font-size.px]="draft().fontSize"
+    [style.line-height.px]="lineHeightPx()"
+    [style.color]="draft().color"
+    placeholder="Type text..."
+    aria-label="Text tool input"
+    (input)="onTextInput($event)"
+    (keydown)="onTextareaKeyDown($event)"
+  ></textarea>
+
+  @for (handle of handles; track handle) {
+    <div
+      class="resize-handle"
+      [class]="'resize-handle handle-' + handle"
+      (pointerdown)="onHandlePointerDown(handle, $event)"
+      (pointermove)="onInteractionPointerMove($event)"
+      (pointerup)="onInteractionPointerUp($event)"
+      (pointercancel)="onInteractionPointerUp($event)"
+    ></div>
+  }
+
+  <div class="action-pill" [class.below]="placeActionsBelow()">
+    <button
+      type="button"
+      class="action-btn apply-btn"
+      title="Apply text (Ctrl+Enter)"
+      (click)="commit.emit()"
+    >
+      Apply
+    </button>
+    <button
+      type="button"
+      class="action-btn cancel-btn"
+      title="Cancel text (Esc)"
+      (click)="cancel.emit()"
+    >
+      Cancel
+    </button>
+  </div>
+</div>

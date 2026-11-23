@@ -1,0 +1,79 @@
+<nav class="menu-bar" aria-label="Application menu">
+  <div class="menu-item">
+    <button
+      type="button"
+      class="menu-trigger"
+      [class.active]="openMenu() === 'file'"
+      [attr.aria-expanded]="openMenu() === 'file'"
+      aria-haspopup="menu"
+      (click)="toggleMenu('file')"
+      (mouseenter)="onMenuTriggerEnter('file')"
+    >
+      File
+    </button>
+    @if (openMenu() === 'file') {
+      <div class="menu-dropdown" role="menu">
+        <button type="button" class="menu-action" role="menuitem" (click)="onNew()">
+          <span>New</span>
+        </button>
+        <button type="button" class="menu-action" role="menuitem" (click)="onOpenClick()">
+          <span>Open...</span>
+        </button>
+        <div class="menu-separator" role="separator"></div>
+        <button type="button" class="menu-action" role="menuitem" (click)="onSave()">
+          <span>Save</span>
+        </button>
+      </div>
+    }
+  </div>
+
+  <div class="menu-item">
+    <button
+      type="button"
+      class="menu-trigger"
+      [class.active]="openMenu() === 'edit'"
+      [attr.aria-expanded]="openMenu() === 'edit'"
+      aria-haspopup="menu"
+      (click)="toggleMenu('edit')"
+      (mouseenter)="onMenuTriggerEnter('edit')"
+    >
+      Edit
+    </button>
+    @if (openMenu() === 'edit') {
+      <div class="menu-dropdown" role="menu">
+        <button type="button" class="menu-action" role="menuitem" disabled>
+          <span>No items yet</span>
+        </button>
+      </div>
+    }
+  </div>
+
+  <div class="menu-item">
+    <button
+      type="button"
+      class="menu-trigger"
+      [class.active]="openMenu() === 'view'"
+      [attr.aria-expanded]="openMenu() === 'view'"
+      aria-haspopup="menu"
+      (click)="toggleMenu('view')"
+      (mouseenter)="onMenuTriggerEnter('view')"
+    >
+      View
+    </button>
+    @if (openMenu() === 'view') {
+      <div class="menu-dropdown" role="menu">
+        <button type="button" class="menu-action" role="menuitem" disabled>
+          <span>No items yet</span>
+        </button>
+      </div>
+    }
+  </div>
+
+  <input
+    #fileInput
+    type="file"
+    accept="image/*"
+    hidden
+    (change)="onFileSelected($event)"
+  />
+</nav>

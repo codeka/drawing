@@ -1,0 +1,149 @@
+.toolbar {
+  display: flex;
+  align-items: stretch;
+  height: 78px;
+  padding: 5px 10px 4px;
+  background: var(--bg-toolbar);
+  border-bottom: 1px solid var(--border-subtle);
+  gap: 8px;
+}
+
+.toolbar-group {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  min-width: 0;
+}
+
+.group-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.group-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1;
+  padding-top: 2px;
+  white-space: nowrap;
+}
+
+.toolbar-divider {
+  width: 1px;
+  align-self: stretch;
+  margin: 2px 2px 4px;
+  background: var(--border-subtle);
+}
+
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(74px, auto));
+  gap: 4px;
+}
+
+.tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+
+  &:hover {
+    background: var(--hover-bg);
+    border-color: var(--border-subtle);
+  }
+
+  &.active {
+    background: var(--accent-soft);
+    border-color: var(--accent-border);
+    color: #1d4ed8;
+    font-weight: 500;
+  }
+}
+
+.tool-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.options-group {
+  min-width: 128px;
+  padding: 0 6px;
+}
+
+.options-empty {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.color-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.active-color-picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 3px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.active-swatch {
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 2px;
+}
+
+.color-native-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 18px);
+  grid-template-rows: repeat(2, 18px);
+  gap: 3px;
+}
+
+.color-swatch {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid rgba(15, 23, 42, 0.28);
+  border-radius: 2px;
+  cursor: pointer;
+
+  &:hover {
+    transform: scale(1.06);
+  }
+
+  &.active {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+}

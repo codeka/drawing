@@ -1,0 +1,44 @@
+:host {
+  display: block;
+  flex: 1;
+  min-height: 0;
+}
+
+.workspace {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  padding: 20px;
+  background: var(--bg-workspace);
+}
+
+.canvas-stage {
+  position: relative;
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.14);
+  background-color: #ffffff;
+  background-image:
+    linear-gradient(45deg, #cccccc 25%, transparent 25%),
+    linear-gradient(-45deg, #cccccc 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #cccccc 75%),
+    linear-gradient(-45deg, transparent 75%, #cccccc 75%);
+  background-size: 20px 20px;
+  background-position:
+    0 0,
+    0 10px,
+    10px -10px,
+    -10px 0;
+}
+
+.draw-canvas {
+  display: block;
+  background: transparent;
+  touch-action: none;
+}
+
+.text-preview-box {
+  position: absolute;
+  border: 1px dashed var(--accent);
+  background: rgba(37, 99, 235, 0.06);
+  pointer-events: none;
+}

@@ -1,0 +1,27 @@
+<div class="app-shell">
+  <app-menu-bar />
+  <app-toolbar />
+  <app-drawing-canvas class="workspace-host" />
+  <footer class="status-bar" aria-label="Canvas status">
+    <div class="status-section">
+      <span class="status-label">Tool:</span>
+      <span>{{ editorState.activeToolDef().label }}</span>
+    </div>
+    <div class="status-divider" aria-hidden="true"></div>
+    <div class="status-section">
+      <span>{{ editorState.canvasWidth() }} × {{ editorState.canvasHeight() }} px</span>
+    </div>
+    <div class="status-divider" aria-hidden="true"></div>
+    <div class="status-section">
+      <span>{{ editorState.fileName() }}</span>
+    </div>
+    <div class="status-spacer"></div>
+    <div class="status-section status-coords">
+      @if (editorState.cursorPos(); as pos) {
+        <span>{{ pos.x }}, {{ pos.y }} px</span>
+      } @else {
+        <span class="muted">Ready</span>
+      }
+    </div>
+  </footer>
+</div>
