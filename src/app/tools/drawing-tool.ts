@@ -7,6 +7,11 @@ export interface ToolContext {
   readonly color: string;
   readonly pencilSize: number;
   readonly eraserSize: number;
+  readonly textFontFamily: string;
+  readonly textFontSize: number;
+  readonly textBold: boolean;
+  readonly textItalic: boolean;
+  readonly textUnderline: boolean;
   getTextDraft(): TextDraft | null;
   setTextDraft(draft: TextDraft | null): void;
   commitTextDraft(): void;

@@ -126,7 +126,122 @@
           />
         }
         @case ('text') {
-          <span class="options-empty">No options yet</span>
+          <div class="text-options">
+            <div class="text-options-row">
+              <select
+                class="text-font-select"
+                aria-label="Font family"
+                title="Font family"
+                [value]="editorState.textFontFamily()"
+                (change)="onFontFamilyChange($event)"
+              >
+                @for (font of textFonts; track font.value) {
+                  <option
+                    [value]="font.value"
+                    [selected]="editorState.textFontFamily() === font.value"
+                    [style.font-family]="font.value"
+                  >
+                    {{ font.label }}
+                  </option>
+                }
+              </select>
+            </div>
+            <div class="text-options-row">
+              <div #fontSizeCombo class="font-size-combo">
+                <input
+                  type="number"
+                  class="font-size-input"
+                  [min]="minTextFontSize"
+                  [max]="maxTextFontSize"
+                  step="1"
+                  [value]="editorState.textFontSize()"
+                  (input)="onFontSizeInput($event)"
+                  (blur)="onFontSizeCommit($event)"
+                  (keydown.enter)="onFontSizeCommit($event)"
+                  aria-label="Font size in pixels"
+                  title="Font size (px)"
+                />
+                <button
+                  type="button"
+                  class="font-size-dropdown-btn"
+                  [class.open]="fontSizeMenuOpen()"
+                  [attr.aria-expanded]="fontSizeMenuOpen()"
+                  aria-haspopup="listbox"
+                  aria-label="Font size presets"
+                  title="Font size presets"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="toggleFontSizeMenu()"
+                >
+                  <svg class="dropdown-chevron" viewBox="0 0 12 12" aria-hidden="true">
+                    <path
+                      d="M2.5 4.25 6 7.75l3.5-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.4"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+                @if (fontSizeMenuOpen()) {
+                  <div class="font-size-menu" role="listbox" aria-label="Font size presets">
+                    @for (preset of textFontSizePresets; track preset) {
+                      <button
+                        type="button"
+                        class="font-size-option"
+                        role="option"
+                        [class.active]="editorState.textFontSize() === preset"
+                        [attr.aria-selected]="editorState.textFontSize() === preset"
+                        (mousedown)="$event.preventDefault()"
+                        (click)="selectFontSizePreset(preset)"
+                      >
+                        {{ preset }}
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+
+              <div class="text-style-group" role="group" aria-label="Text style">
+                <button
+                  type="button"
+                  class="style-btn style-btn-bold"
+                  [class.active]="editorState.textBold()"
+                  [attr.aria-pressed]="editorState.textBold()"
+                  aria-label="Bold"
+                  title="Bold (Ctrl+B)"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="toggleBold()"
+                >
+                  B
+                </button>
+                <button
+                  type="button"
+                  class="style-btn style-btn-italic"
+                  [class.active]="editorState.textItalic()"
+                  [attr.aria-pressed]="editorState.textItalic()"
+                  aria-label="Italic"
+                  title="Italic (Ctrl+I)"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="toggleItalic()"
+                >
+                  I
+                </button>
+                <button
+                  type="button"
+                  class="style-btn style-btn-underline"
+                  [class.active]="editorState.textUnderline()"
+                  [attr.aria-pressed]="editorState.textUnderline()"
+                  aria-label="Underline"
+                  title="Underline (Ctrl+U)"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="toggleUnderline()"
+                >
+                  U
+                </button>
+              </div>
+            </div>
+          </div>
         }
       }
     </div>

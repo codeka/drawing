@@ -43,6 +43,7 @@
         [canvasWidth]="editorState.canvasWidth()"
         [canvasHeight]="editorState.canvasHeight()"
         (draftChange)="editorState.updateTextDraft($event)"
+        (toggleStyle)="onToggleTextStyle($event)"
         (commit)="canvasDoc.commitActiveEdit()"
         (cancel)="canvasDoc.cancelActiveEdit()"
       />

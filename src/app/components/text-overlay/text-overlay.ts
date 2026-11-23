@@ -8,7 +8,7 @@ import {
   output,
   viewChild,
 } from '@angular/core';
-import { Rect, TextDraft } from '../../models/tool.model';
+import { Rect, TextDraft, TextStyleOption } from '../../models/tool.model';
 import { getTextLineHeight } from '../../tools/text-renderer';
 
 export type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
@@ -40,6 +40,7 @@ export class TextOverlay {
   readonly canvasHeight = input.required<number>();
 
   readonly draftChange = output<Partial<TextDraft>>();
+  readonly toggleStyle = output<TextStyleOption>();
   readonly commit = output<void>();
   readonly cancel = output<void>();
 
@@ -164,6 +165,16 @@ export class TextOverlay {
     if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
       event.preventDefault();
       this.commit.emit();
+      return;
+    }
+    if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey) {
+      const key = event.key.toLowerCase();
+      if (key === 'b' || key === 'i' || key === 'u') {
+        event.preventDefault();
+        const style: TextStyleOption =
+          key === 'b' ? 'bold' : key === 'i' ? 'italic' : 'underline';
+        this.toggleStyle.emit(style);
+      }
     }
   }
 }

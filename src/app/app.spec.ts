@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 import { App } from './app';
 import { CanvasDocumentService } from './core/canvas-document.service';
 import { EditorStateService } from './core/editor-state.service';
-import { TRANSPARENT_COLOR } from './models/tool.model';
+import { DEFAULT_TEXT_FONT_FAMILY, TRANSPARENT_COLOR } from './models/tool.model';
 
 describe('App', () => {
   beforeEach(async () => {
@@ -40,12 +40,21 @@ describe('App', () => {
     expect(compiled.querySelector('.status-bar')?.textContent).toContain('1280 × 1024 px');
   });
 
-  it('updates dynamic tool options label and shows empty placeholder for Fill and Text', async () => {
+  it('updates dynamic tool options for Fill (empty) and Text (font & style controls)', async () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     await fixture.whenStable();
 
     const compiled = fixture.nativeElement as HTMLElement;
+    const fillBtn = compiled.querySelector('button[aria-label="Fill"]') as HTMLButtonElement;
+    fillBtn.click();
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('.options-group .group-label')?.textContent?.trim()).toBe(
+      'Fill Options',
+    );
+    expect(compiled.querySelector('.options-empty')?.textContent?.trim()).toBe('No options yet');
+
     const textBtn = compiled.querySelector('button[aria-label="Text"]') as HTMLButtonElement;
     textBtn.click();
     fixture.detectChanges();
@@ -53,7 +62,129 @@ describe('App', () => {
     expect(compiled.querySelector('.options-group .group-label')?.textContent?.trim()).toBe(
       'Text Options',
     );
-    expect(compiled.querySelector('.options-empty')?.textContent?.trim()).toBe('No options yet');
+    expect(compiled.querySelector('.options-empty')).toBeNull();
+    expect(compiled.querySelector('select[aria-label="Font family"]')).toBeTruthy();
+    expect(compiled.querySelector('input[aria-label="Font size in pixels"]')).toBeTruthy();
+    expect(compiled.querySelector('button[aria-label="Font size presets"]')).toBeTruthy();
+    expect(compiled.querySelector('button[aria-label="Bold"]')).toBeTruthy();
+    expect(compiled.querySelector('button[aria-label="Italic"]')).toBeTruthy();
+    expect(compiled.querySelector('button[aria-label="Underline"]')).toBeTruthy();
+  });
+
+  it('updates text option defaults, syncs active text box live, and supports B/I/U shortcuts', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const editorState = TestBed.inject(EditorStateService);
+
+    const textBtn = compiled.querySelector('button[aria-label="Text"]') as HTMLButtonElement;
+    textBtn.click();
+    fixture.detectChanges();
+
+    const fontSelect = compiled.querySelector('select[aria-label="Font family"]') as HTMLSelectElement;
+    const fontSizeInput = compiled.querySelector(
+      'input[aria-label="Font size in pixels"]',
+    ) as HTMLInputElement;
+    const presetsBtn = compiled.querySelector(
+      'button[aria-label="Font size presets"]',
+    ) as HTMLButtonElement;
+    const boldBtn = compiled.querySelector('button[aria-label="Bold"]') as HTMLButtonElement;
+    const italicBtn = compiled.querySelector('button[aria-label="Italic"]') as HTMLButtonElement;
+    const underlineBtn = compiled.querySelector(
+      'button[aria-label="Underline"]',
+    ) as HTMLButtonElement;
+
+    expect(fontSelect.value).toBe(DEFAULT_TEXT_FONT_FAMILY);
+    expect(fontSizeInput.value).toBe('24');
+    expect(boldBtn.getAttribute('aria-pressed')).toBe('false');
+    expect(italicBtn.getAttribute('aria-pressed')).toBe('false');
+    expect(underlineBtn.getAttribute('aria-pressed')).toBe('false');
+
+    // Change defaults before opening a text box
+    fontSelect.value = 'Georgia, serif';
+    fontSelect.dispatchEvent(new Event('change'));
+    presetsBtn.click();
+    fixture.detectChanges();
+
+    const preset36 = Array.from(compiled.querySelectorAll('.font-size-option')).find(
+      (btn) => btn.textContent?.trim() === '36',
+    ) as HTMLButtonElement;
+    expect(preset36).toBeTruthy();
+    preset36.click();
+    boldBtn.click();
+    fixture.detectChanges();
+
+    expect(editorState.textFontFamily()).toBe('Georgia, serif');
+    expect(editorState.textFontSize()).toBe(36);
+    expect(editorState.textBold()).toBe(true);
+    expect(compiled.querySelector('.font-size-menu')).toBeNull();
+
+    // Open an active text draft with the current defaults
+    editorState.activeTextDraft.set({
+      rect: { x: 20, y: 30, width: 240, height: 80 },
+      text: 'Hello World',
+      fontFamily: editorState.textFontFamily(),
+      fontSize: editorState.textFontSize(),
+      bold: editorState.textBold(),
+      italic: editorState.textItalic(),
+      underline: editorState.textUnderline(),
+      color: editorState.foregroundColor(),
+    });
+    fixture.detectChanges();
+
+    const textarea = compiled.querySelector('.text-input') as HTMLTextAreaElement;
+    expect(textarea).toBeTruthy();
+    expect(textarea.style.fontFamily).toContain('Georgia');
+    expect(textarea.style.fontSize).toBe('36px');
+    expect(textarea.style.fontWeight).toBe('bold');
+    expect(textarea.style.fontStyle).toBe('normal');
+    expect(textarea.style.textDecoration).toBe('none');
+
+    // Changing toolbar options updates both defaults and the active text overlay live
+    fontSelect.value = 'Consolas, monospace';
+    fontSelect.dispatchEvent(new Event('change'));
+    fontSizeInput.value = '48';
+    fontSizeInput.dispatchEvent(new Event('input'));
+    italicBtn.click();
+    underlineBtn.click();
+    fixture.detectChanges();
+
+    expect(editorState.textFontFamily()).toBe('Consolas, monospace');
+    expect(editorState.textFontSize()).toBe(48);
+    expect(editorState.textItalic()).toBe(true);
+    expect(editorState.textUnderline()).toBe(true);
+    expect(editorState.activeTextDraft()).toMatchObject({
+      fontFamily: 'Consolas, monospace',
+      fontSize: 48,
+      bold: true,
+      italic: true,
+      underline: true,
+    });
+    expect(textarea.style.fontFamily).toContain('Consolas');
+    expect(textarea.style.fontSize).toBe('48px');
+    expect(textarea.style.fontWeight).toBe('bold');
+    expect(textarea.style.fontStyle).toBe('italic');
+    expect(textarea.style.textDecoration).toContain('underline');
+
+    // Keyboard shortcuts Ctrl+B, Ctrl+I, Ctrl+U inside textarea toggle styles on draft and defaults
+    textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'b', ctrlKey: true, bubbles: true }));
+    textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'i', ctrlKey: true, bubbles: true }));
+    textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'u', ctrlKey: true, bubbles: true }));
+    fixture.detectChanges();
+
+    expect(editorState.textBold()).toBe(false);
+    expect(editorState.textItalic()).toBe(false);
+    expect(editorState.textUnderline()).toBe(false);
+    expect(editorState.activeTextDraft()).toMatchObject({
+      bold: false,
+      italic: false,
+      underline: false,
+    });
+    expect(textarea.style.fontWeight).toBe('normal');
+    expect(textarea.style.fontStyle).toBe('normal');
+    expect(textarea.style.textDecoration).toBe('none');
   });
 
   it('renders independent size slider and number input for Pencil (1px) and Eraser (10px)', async () => {

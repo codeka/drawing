@@ -75,6 +75,9 @@ describe('CanvasDocumentService', () => {
       text: 'draft',
       fontFamily: 'Segoe UI',
       fontSize: 20,
+      bold: false,
+      italic: false,
+      underline: false,
       color: '#000000',
     });
 
@@ -150,6 +153,9 @@ describe('CanvasDocumentService', () => {
         text: 'hello',
         fontFamily: 'Segoe UI',
         fontSize: 20,
+        bold: false,
+        italic: false,
+        underline: false,
         color: '#000000',
       });
 

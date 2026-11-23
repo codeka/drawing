@@ -4,9 +4,13 @@ import {
   DEFAULT_CANVAS_WIDTH,
   DEFAULT_ERASER_SIZE,
   DEFAULT_PENCIL_SIZE,
+  DEFAULT_TEXT_FONT_FAMILY,
+  DEFAULT_TEXT_FONT_SIZE,
   getToolDefinition,
   MAX_BRUSH_SIZE,
+  MAX_TEXT_FONT_SIZE,
   MIN_BRUSH_SIZE,
+  MIN_TEXT_FONT_SIZE,
   Point,
   Rect,
   TextDraft,
@@ -20,6 +24,13 @@ function clampBrushSize(value: number): number | null {
   return Math.max(MIN_BRUSH_SIZE, Math.min(MAX_BRUSH_SIZE, Math.round(value)));
 }
 
+function clampTextFontSize(value: number): number | null {
+  if (!Number.isFinite(value)) {
+    return null;
+  }
+  return Math.max(MIN_TEXT_FONT_SIZE, Math.min(MAX_TEXT_FONT_SIZE, Math.round(value)));
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -28,6 +39,11 @@ export class EditorStateService {
   readonly foregroundColor = signal<string>('#000000');
   readonly pencilSize = signal<number>(DEFAULT_PENCIL_SIZE);
   readonly eraserSize = signal<number>(DEFAULT_ERASER_SIZE);
+  readonly textFontFamily = signal<string>(DEFAULT_TEXT_FONT_FAMILY);
+  readonly textFontSize = signal<number>(DEFAULT_TEXT_FONT_SIZE);
+  readonly textBold = signal<boolean>(false);
+  readonly textItalic = signal<boolean>(false);
+  readonly textUnderline = signal<boolean>(false);
   readonly canvasWidth = signal<number>(DEFAULT_CANVAS_WIDTH);
   readonly canvasHeight = signal<number>(DEFAULT_CANVAS_HEIGHT);
   readonly fileName = signal<string>('untitled.png');
@@ -49,6 +65,51 @@ export class EditorStateService {
     if (clamped !== null) {
       this.eraserSize.set(clamped);
     }
+  }
+
+  setTextFontFamily(fontFamily: string): void {
+    const trimmed = fontFamily.trim();
+    if (!trimmed) {
+      return;
+    }
+    this.textFontFamily.set(trimmed);
+    this.updateTextDraft({ fontFamily: trimmed });
+  }
+
+  setTextFontSize(size: number): void {
+    const clamped = clampTextFontSize(size);
+    if (clamped === null) {
+      return;
+    }
+    this.textFontSize.set(clamped);
+    this.updateTextDraft({ fontSize: clamped });
+  }
+
+  setTextBold(bold: boolean): void {
+    this.textBold.set(bold);
+    this.updateTextDraft({ bold });
+  }
+
+  toggleTextBold(): void {
+    this.setTextBold(!this.textBold());
+  }
+
+  setTextItalic(italic: boolean): void {
+    this.textItalic.set(italic);
+    this.updateTextDraft({ italic });
+  }
+
+  toggleTextItalic(): void {
+    this.setTextItalic(!this.textItalic());
+  }
+
+  setTextUnderline(underline: boolean): void {
+    this.textUnderline.set(underline);
+    this.updateTextDraft({ underline });
+  }
+
+  toggleTextUnderline(): void {
+    this.setTextUnderline(!this.textUnderline());
   }
 
   setForegroundColor(color: string): void {

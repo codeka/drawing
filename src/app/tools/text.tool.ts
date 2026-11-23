@@ -1,11 +1,6 @@
-import {
-  DEFAULT_TEXT_FONT_FAMILY,
-  DEFAULT_TEXT_FONT_SIZE,
-  getToolDefinition,
-  Point,
-  Rect,
-} from '../models/tool.model';
+import { getToolDefinition, Point, Rect } from '../models/tool.model';
 import { DrawingTool, ToolContext } from './drawing-tool';
+import { getTextLineHeight, TEXT_BOX_PADDING } from './text-renderer';
 
 const DEFAULT_BOX_WIDTH = 240;
 const DEFAULT_BOX_HEIGHT = 80;
@@ -87,7 +82,11 @@ export class TextTool implements DrawingTool {
       rect = dragged;
     } else {
       const boxWidth = Math.min(DEFAULT_BOX_WIDTH, Math.max(40, toolCtx.width));
-      const boxHeight = Math.min(DEFAULT_BOX_HEIGHT, Math.max(28, toolCtx.height));
+      const minHeightForFont = getTextLineHeight(toolCtx.textFontSize) + TEXT_BOX_PADDING * 2;
+      const boxHeight = Math.min(
+        Math.max(DEFAULT_BOX_HEIGHT, minHeightForFont),
+        Math.max(28, toolCtx.height),
+      );
       const x = clamp(Math.round(clamped.x), 0, Math.max(0, toolCtx.width - boxWidth));
       const y = clamp(Math.round(clamped.y), 0, Math.max(0, toolCtx.height - boxHeight));
       rect = { x, y, width: boxWidth, height: boxHeight };
@@ -96,8 +95,11 @@ export class TextTool implements DrawingTool {
     toolCtx.setTextDraft({
       rect,
       text: '',
-      fontFamily: DEFAULT_TEXT_FONT_FAMILY,
-      fontSize: DEFAULT_TEXT_FONT_SIZE,
+      fontFamily: toolCtx.textFontFamily,
+      fontSize: toolCtx.textFontSize,
+      bold: toolCtx.textBold,
+      italic: toolCtx.textItalic,
+      underline: toolCtx.textUnderline,
       color: toolCtx.color,
     });
   }

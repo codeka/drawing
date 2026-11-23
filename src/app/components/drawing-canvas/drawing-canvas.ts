@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { CanvasDocumentService } from '../../core/canvas-document.service';
 import { EditorStateService } from '../../core/editor-state.service';
-import { Point, ToolId } from '../../models/tool.model';
+import { Point, TextStyleOption, ToolId } from '../../models/tool.model';
 import { ToolContext } from '../../tools/drawing-tool';
 import { createToolMap } from '../../tools/tool-registry';
 import { TextOverlay } from '../text-overlay/text-overlay';
@@ -139,6 +139,20 @@ export class DrawingCanvas {
     }
   }
 
+  onToggleTextStyle(style: TextStyleOption): void {
+    switch (style) {
+      case 'bold':
+        this.editorState.toggleTextBold();
+        break;
+      case 'italic':
+        this.editorState.toggleTextItalic();
+        break;
+      case 'underline':
+        this.editorState.toggleTextUnderline();
+        break;
+    }
+  }
+
   private toCanvasPoint(event: PointerEvent, canvas: HTMLCanvasElement): Point {
     const rect = canvas.getBoundingClientRect();
     const scaleX = rect.width > 0 ? canvas.width / rect.width : 1;
@@ -170,6 +184,11 @@ export class DrawingCanvas {
       color: this.editorState.foregroundColor(),
       pencilSize: this.editorState.pencilSize(),
       eraserSize: this.editorState.eraserSize(),
+      textFontFamily: this.editorState.textFontFamily(),
+      textFontSize: this.editorState.textFontSize(),
+      textBold: this.editorState.textBold(),
+      textItalic: this.editorState.textItalic(),
+      textUnderline: this.editorState.textUnderline(),
       getTextDraft: () => this.editorState.activeTextDraft(),
       setTextDraft: (draft) => this.editorState.activeTextDraft.set(draft),
       commitTextDraft: () => this.canvasDoc.commitActiveEdit(),

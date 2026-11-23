@@ -27,8 +27,18 @@ export interface TextDraft {
   text: string;
   fontFamily: string;
   fontSize: number;
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
   color: string;
 }
+
+export interface FontOption {
+  label: string;
+  value: string;
+}
+
+export type TextStyleOption = 'bold' | 'italic' | 'underline';
 
 export interface NewImageOptions {
   width: number;
@@ -43,6 +53,25 @@ export const MAX_CANVAS_SIZE = 8192;
 export const TRANSPARENT_COLOR = 'transparent';
 export const DEFAULT_TEXT_FONT_FAMILY = 'Segoe UI, Arial, sans-serif';
 export const DEFAULT_TEXT_FONT_SIZE = 24;
+export const MIN_TEXT_FONT_SIZE = 8;
+export const MAX_TEXT_FONT_SIZE = 200;
+export const TEXT_FONT_SIZE_PRESETS: readonly number[] = [
+  8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 36, 48, 72, 96, 120,
+];
+export const TEXT_FONT_OPTIONS: readonly FontOption[] = [
+  { label: 'Segoe UI', value: DEFAULT_TEXT_FONT_FAMILY },
+  { label: 'Arial', value: 'Arial, Helvetica, sans-serif' },
+  { label: 'Calibri', value: 'Calibri, sans-serif' },
+  { label: 'Verdana', value: 'Verdana, Geneva, sans-serif' },
+  { label: 'Trebuchet MS', value: "'Trebuchet MS', Helvetica, sans-serif" },
+  { label: 'Tahoma', value: 'Tahoma, Geneva, sans-serif' },
+  { label: 'Georgia', value: 'Georgia, serif' },
+  { label: 'Times New Roman', value: "'Times New Roman', Times, serif" },
+  { label: 'Courier New', value: "'Courier New', Courier, monospace" },
+  { label: 'Consolas', value: 'Consolas, monospace' },
+  { label: 'Comic Sans MS', value: "'Comic Sans MS', cursive, sans-serif" },
+  { label: 'Impact', value: 'Impact, sans-serif' },
+];
 
 export const MIN_BRUSH_SIZE = 1;
 export const MAX_BRUSH_SIZE = 200;
