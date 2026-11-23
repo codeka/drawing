@@ -36,6 +36,13 @@
   touch-action: none;
 }
 
+.preview-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
 .brush-cursor-layer {
   position: absolute;
   inset: 0;
@@ -52,9 +59,11 @@
     0 0 0 2px rgba(255, 255, 255, 0.85);
 }
 
-.text-preview-box {
+.text-preview-box,
+.shape-preview-box {
   position: absolute;
   border: 1px dashed var(--accent);
   background: rgba(37, 99, 235, 0.06);
   pointer-events: none;
+  z-index: 6;
 }

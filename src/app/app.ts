@@ -15,6 +15,8 @@ const TOOL_SHORTCUTS: Record<string, ToolId> = {
   f: 'fill',
   e: 'eraser',
   t: 'text',
+  l: 'line',
+  s: 'shapes',
 };
 
 @Component({
@@ -75,6 +77,19 @@ export class App {
         target.isContentEditable)
     ) {
       return;
+    }
+
+    if (this.editorState.activeShapeDraft() !== null) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        this.canvasDoc.cancelActiveEdit();
+        return;
+      }
+      if (event.key === 'Enter' && target?.tagName !== 'BUTTON') {
+        event.preventDefault();
+        this.canvasDoc.commitActiveEdit();
+        return;
+      }
     }
 
     const toolId = TOOL_SHORTCUTS[event.key.toLowerCase()];

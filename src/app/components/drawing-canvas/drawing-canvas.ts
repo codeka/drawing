@@ -13,12 +13,15 @@ import { CanvasDocumentService } from '../../core/canvas-document.service';
 import { EditorStateService } from '../../core/editor-state.service';
 import { Point, TextStyleOption, ToolId } from '../../models/tool.model';
 import { ToolContext } from '../../tools/drawing-tool';
+import { renderLineToCanvas } from '../../tools/line-renderer';
+import { renderShapeToCanvas } from '../../tools/shape-renderer';
 import { createToolMap } from '../../tools/tool-registry';
+import { ShapeOverlay } from '../shape-overlay/shape-overlay';
 import { TextOverlay } from '../text-overlay/text-overlay';
 
 @Component({
   selector: 'app-drawing-canvas',
-  imports: [TextOverlay],
+  imports: [TextOverlay, ShapeOverlay],
   templateUrl: './drawing-canvas.html',
   styleUrl: './drawing-canvas.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,6 +31,8 @@ export class DrawingCanvas {
   readonly canvasDoc = inject(CanvasDocumentService);
 
   private readonly canvasRef = viewChild.required<ElementRef<HTMLCanvasElement>>('drawCanvas');
+  private readonly previewCanvasRef =
+    viewChild.required<ElementRef<HTMLCanvasElement>>('previewCanvas');
   private readonly tools = createToolMap();
   private activePointerId: number | null = null;
   private previousTool: ToolId | null = null;
@@ -67,6 +72,42 @@ export class DrawingCanvas {
       }
       this.previousTool = nextTool;
     });
+
+    effect(() => {
+      const width = this.editorState.canvasWidth();
+      const height = this.editorState.canvasHeight();
+      const line = this.editorState.linePreview();
+      const shapeDraft = this.editorState.activeShapeDraft();
+      const shapePreview = this.editorState.shapeSelectionPreview();
+
+      const previewCanvas = this.previewCanvasRef().nativeElement;
+      if (previewCanvas.width !== width) {
+        previewCanvas.width = width;
+      }
+      if (previewCanvas.height !== height) {
+        previewCanvas.height = height;
+      }
+
+      const pCtx = previewCanvas.getContext('2d');
+      if (!pCtx) {
+        return;
+      }
+      pCtx.clearRect(0, 0, width, height);
+
+      if (line) {
+        renderLineToCanvas(pCtx, line);
+      } else if (shapeDraft) {
+        renderShapeToCanvas(pCtx, shapeDraft);
+      } else if (shapePreview && shapePreview.width > 0 && shapePreview.height > 0) {
+        renderShapeToCanvas(pCtx, {
+          rect: shapePreview,
+          shapeType: this.editorState.shapeType(),
+          outlineWidth: this.editorState.shapeOutlineWidth(),
+          outlineColor: this.editorState.shapeOutlineColor(),
+          fillColor: this.editorState.shapeFillColor(),
+        });
+      }
+    });
   }
 
   onPointerDown(event: PointerEvent): void {
@@ -89,7 +130,10 @@ export class DrawingCanvas {
 
     const point = this.toCanvasPoint(event, canvas);
     this.updateCursor(point);
-    this.tools[this.editorState.activeTool()].onPointerDown(point, this.buildToolContext(ctx));
+    this.tools[this.editorState.activeTool()].onPointerDown(
+      point,
+      this.buildToolContext(ctx, event.shiftKey),
+    );
   }
 
   onPointerMove(event: PointerEvent): void {
@@ -106,7 +150,10 @@ export class DrawingCanvas {
       return;
     }
 
-    this.tools[this.editorState.activeTool()].onPointerMove(point, this.buildToolContext(ctx));
+    this.tools[this.editorState.activeTool()].onPointerMove(
+      point,
+      this.buildToolContext(ctx, event.shiftKey),
+    );
   }
 
   onPointerUp(event: PointerEvent): void {
@@ -130,7 +177,10 @@ export class DrawingCanvas {
     }
 
     const point = this.toCanvasPoint(event, canvas);
-    this.tools[this.editorState.activeTool()].onPointerUp(point, this.buildToolContext(ctx));
+    this.tools[this.editorState.activeTool()].onPointerUp(
+      point,
+      this.buildToolContext(ctx, event.shiftKey),
+    );
   }
 
   onPointerLeave(): void {
@@ -176,7 +226,7 @@ export class DrawingCanvas {
     }
   }
 
-  private buildToolContext(ctx: CanvasRenderingContext2D): ToolContext {
+  private buildToolContext(ctx: CanvasRenderingContext2D, shiftKey = false): ToolContext {
     return {
       ctx,
       width: this.editorState.canvasWidth(),
@@ -184,6 +234,15 @@ export class DrawingCanvas {
       color: this.editorState.foregroundColor(),
       pencilSize: this.editorState.pencilSize(),
       eraserSize: this.editorState.eraserSize(),
+      lineWidth: this.editorState.lineWidth(),
+      lineStartCap: this.editorState.lineStartCap(),
+      lineEndCap: this.editorState.lineEndCap(),
+      shapeType: this.editorState.shapeType(),
+      shapeOutlineWidth: this.editorState.shapeOutlineWidth(),
+      shapeOutlineColor: this.editorState.shapeOutlineColor(),
+      shapeFillColor: this.editorState.shapeFillColor(),
+      shapeInstant: this.editorState.shapeInstant(),
+      shiftKey,
       textFontFamily: this.editorState.textFontFamily(),
       textFontSize: this.editorState.textFontSize(),
       textBold: this.editorState.textBold(),
@@ -193,6 +252,11 @@ export class DrawingCanvas {
       setTextDraft: (draft) => this.editorState.activeTextDraft.set(draft),
       commitTextDraft: () => this.canvasDoc.commitActiveEdit(),
       setTextSelectionPreview: (rect) => this.editorState.textSelectionPreview.set(rect),
+      getShapeDraft: () => this.editorState.activeShapeDraft(),
+      setShapeDraft: (draft) => this.editorState.activeShapeDraft.set(draft),
+      commitShapeDraft: () => this.canvasDoc.commitActiveEdit(),
+      setShapeSelectionPreview: (rect) => this.editorState.shapeSelectionPreview.set(rect),
+      setLinePreview: (line) => this.editorState.linePreview.set(line),
     };
   }
 }

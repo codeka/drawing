@@ -1,4 +1,4 @@
-export type ToolId = 'pencil' | 'fill' | 'eraser' | 'text';
+export type ToolId = 'pencil' | 'fill' | 'eraser' | 'text' | 'line' | 'shapes';
 
 export type ToolMode = 'direct' | 'staged';
 
@@ -46,6 +46,61 @@ export interface NewImageOptions {
   fillColor: string;
 }
 
+export type ShapeType =
+  | 'rectangle'
+  | 'rounded-rectangle'
+  | 'ellipse'
+  | 'triangle'
+  | 'diamond'
+  | 'hexagon'
+  | 'star'
+  | 'plus'
+  | 'heart'
+  | 'arrow';
+
+export interface ShapeDefinition {
+  readonly id: ShapeType;
+  readonly label: string;
+}
+
+export interface ShapeDraft {
+  rect: Rect;
+  shapeType: ShapeType;
+  outlineWidth: number;
+  outlineColor: string;
+  fillColor: string;
+}
+
+export type ShapeColorSlot = 'outline' | 'fill';
+
+export type LineCap =
+  | 'round'
+  | 'flat'
+  | 'arrow'
+  | 'open-arrow'
+  | 'stealth-arrow'
+  | 'hollow-arrow'
+  | 'circle'
+  | 'square'
+  | 'diamond'
+  | 'bar';
+
+export type LineCapSlot = 'start' | 'end';
+
+export interface LineCapDefinition {
+  readonly id: LineCap;
+  readonly label: string;
+}
+
+export interface LineDraft {
+  start: Point;
+  end: Point;
+  color: string;
+  thickness: number;
+  startCap: LineCap;
+  endCap: LineCap;
+}
+
 export const DEFAULT_CANVAS_WIDTH = 1280;
 export const DEFAULT_CANVAS_HEIGHT = 1024;
 export const MIN_CANVAS_SIZE = 1;
@@ -79,11 +134,47 @@ export const SLIDER_MAX_BRUSH_SIZE = 100;
 export const DEFAULT_PENCIL_SIZE = 8;
 export const DEFAULT_ERASER_SIZE = 10;
 
+export const DEFAULT_SHAPE_TYPE: ShapeType = 'rectangle';
+export const DEFAULT_SHAPE_OUTLINE_WIDTH = 8;
+export const DEFAULT_SHAPE_OUTLINE_COLOR = '#000000';
+export const DEFAULT_SHAPE_FILL_COLOR = TRANSPARENT_COLOR;
+export const DEFAULT_LINE_WIDTH = 8;
+export const DEFAULT_LINE_START_CAP: LineCap = 'round';
+export const DEFAULT_LINE_END_CAP: LineCap = 'round';
+
+export const SHAPE_DEFINITIONS: readonly ShapeDefinition[] = [
+  { id: 'rectangle', label: 'Rectangle' },
+  { id: 'rounded-rectangle', label: 'Rounded Rectangle' },
+  { id: 'ellipse', label: 'Ellipse' },
+  { id: 'triangle', label: 'Triangle' },
+  { id: 'diamond', label: 'Diamond' },
+  { id: 'hexagon', label: 'Hexagon' },
+  { id: 'star', label: 'Star' },
+  { id: 'plus', label: 'Plus' },
+  { id: 'heart', label: 'Heart' },
+  { id: 'arrow', label: 'Arrow' },
+];
+
+export const LINE_CAP_DEFINITIONS: readonly LineCapDefinition[] = [
+  { id: 'round', label: 'Round' },
+  { id: 'flat', label: 'Flat' },
+  { id: 'arrow', label: 'Arrow' },
+  { id: 'open-arrow', label: 'Open Arrow' },
+  { id: 'stealth-arrow', label: 'Stealth Arrow' },
+  { id: 'hollow-arrow', label: 'Hollow Arrow' },
+  { id: 'circle', label: 'Circle' },
+  { id: 'square', label: 'Square' },
+  { id: 'diamond', label: 'Diamond' },
+  { id: 'bar', label: 'Bar' },
+];
+
 export const TOOL_DEFINITIONS: readonly ToolDefinition[] = [
   { id: 'pencil', label: 'Pencil', mode: 'direct', shortcut: 'P', cursor: 'crosshair' },
   { id: 'fill', label: 'Fill', mode: 'direct', shortcut: 'F', cursor: 'crosshair' },
   { id: 'eraser', label: 'Eraser', mode: 'direct', shortcut: 'E', cursor: 'crosshair' },
   { id: 'text', label: 'Text', mode: 'staged', shortcut: 'T', cursor: 'text' },
+  { id: 'line', label: 'Line', mode: 'direct', shortcut: 'L', cursor: 'crosshair' },
+  { id: 'shapes', label: 'Shapes', mode: 'staged', shortcut: 'S', cursor: 'crosshair' },
 ];
 
 export const PRESET_COLORS: readonly string[] = [

@@ -1,0 +1,96 @@
+<div class="shape-options">
+  <div class="shape-grid" role="group" aria-label="Shape type">
+    @for (shape of shapes; track shape.id) {
+      <button
+        type="button"
+        class="shape-btn"
+        [class.active]="editorState.shapeType() === shape.id"
+        [attr.aria-pressed]="editorState.shapeType() === shape.id"
+        [attr.aria-label]="shape.label"
+        [title]="shape.label"
+        (click)="selectShape(shape.id)"
+      >
+        <svg class="shape-icon" viewBox="0 0 16 16" aria-hidden="true">
+          @switch (shape.id) {
+            @case ('rectangle') {
+              <rect x="2.2" y="3.2" width="11.6" height="9.6" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="miter" />
+            }
+            @case ('rounded-rectangle') {
+              <rect x="2.2" y="3.2" width="11.6" height="9.6" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.35" />
+            }
+            @case ('ellipse') {
+              <ellipse cx="8" cy="8" rx="5.8" ry="4.6" fill="none" stroke="currentColor" stroke-width="1.35" />
+            }
+            @case ('triangle') {
+              <polygon points="8,2.2 13.8,13.3 2.2,13.3" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round" />
+            }
+            @case ('diamond') {
+              <polygon points="8,2 14,8 8,14 2,8" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round" />
+            }
+            @case ('hexagon') {
+              <polygon points="4.8,2.5 11.2,2.5 14,8 11.2,13.5 4.8,13.5 2,8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" />
+            }
+            @case ('star') {
+              <polygon points="8,1.8 9.8,5.7 14,6.2 10.9,9.1 11.7,13.4 8,11.3 4.3,13.4 5.1,9.1 2,6.2 6.2,5.7" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" />
+            }
+            @case ('plus') {
+              <polygon points="6,2 10,2 10,6 14,6 14,10 10,10 10,14 6,14 6,10 2,10 2,6 6,6" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="miter" />
+            }
+            @case ('heart') {
+              <path d="M8 13.6C4 11 2.2 8.7 2.2 6.2A3.1 3.1 0 0 1 8 4.6a3.1 3.1 0 0 1 5.8 1.6c0 2.5-1.8 4.8-5.8 7.4Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" />
+            }
+            @case ('arrow') {
+              <polygon points="2,5.6 8.8,5.6 8.8,2.5 14,8 8.8,13.5 8.8,10.4 2,10.4" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round" />
+            }
+          }
+        </svg>
+      </button>
+    }
+  </div>
+
+  <div class="sub-divider" aria-hidden="true"></div>
+
+  <div class="outline-option">
+    <input
+      type="range"
+      class="size-slider"
+      [min]="minBrushSize"
+      [max]="sliderMaxBrushSize"
+      step="1"
+      [value]="sliderValue(editorState.shapeOutlineWidth())"
+      (input)="onOutlineSliderInput($event)"
+      aria-label="Outline width slider"
+    />
+    <div class="size-row">
+      <label class="option-label" for="shape-outline-width-input">Outline</label>
+      <div class="size-input-wrap">
+        <input
+          id="shape-outline-width-input"
+          type="number"
+          class="size-number-input"
+          [min]="minBrushSize"
+          [max]="maxBrushSize"
+          step="1"
+          [value]="editorState.shapeOutlineWidth()"
+          (input)="onOutlineTextInput($event)"
+          (blur)="onOutlineTextCommit($event)"
+          (keydown.enter)="onOutlineTextCommit($event)"
+          aria-label="Outline width in pixels"
+        />
+        <span class="size-unit">px</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub-divider" aria-hidden="true"></div>
+
+  <label class="instant-option" title="Render shapes immediately without edit mode">
+    <input
+      type="checkbox"
+      class="instant-checkbox"
+      [checked]="editorState.shapeInstant()"
+      (change)="onInstantChange($event)"
+    />
+    <span>Instant</span>
+  </label>
+</div>

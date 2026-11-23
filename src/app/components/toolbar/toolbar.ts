@@ -1,40 +1,29 @@
 import { NgTemplateOutlet } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  effect,
-  ElementRef,
-  inject,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CanvasDocumentService } from '../../core/canvas-document.service';
 import { EditorStateService } from '../../core/editor-state.service';
 import {
   MAX_BRUSH_SIZE,
-  MAX_TEXT_FONT_SIZE,
   MIN_BRUSH_SIZE,
-  MIN_TEXT_FONT_SIZE,
+  ShapeColorSlot,
   SLIDER_MAX_BRUSH_SIZE,
-  TEXT_FONT_OPTIONS,
-  TEXT_FONT_SIZE_PRESETS,
   TOOL_DEFINITIONS,
   ToolId,
+  TRANSPARENT_COLOR,
 } from '../../models/tool.model';
 import { ColorPicker } from '../color-picker/color-picker';
+import { LineOptions } from '../line-options/line-options';
+import { ShapeOptions } from '../shape-options/shape-options';
+import { TextOptions } from '../text-options/text-options';
 
 type BrushToolId = 'pencil' | 'eraser';
 
 @Component({
   selector: 'app-toolbar',
-  imports: [NgTemplateOutlet, ColorPicker],
+  imports: [NgTemplateOutlet, ColorPicker, LineOptions, ShapeOptions, TextOptions],
   templateUrl: './toolbar.html',
   styleUrl: './toolbar.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: {
-    '(document:pointerdown)': 'onDocumentPointerDown($event)',
-    '(document:keydown.escape)': 'closeFontSizeMenu()',
-  },
 })
 export class Toolbar {
   readonly editorState = inject(EditorStateService);
@@ -44,21 +33,6 @@ export class Toolbar {
   readonly minBrushSize = MIN_BRUSH_SIZE;
   readonly maxBrushSize = MAX_BRUSH_SIZE;
   readonly sliderMaxBrushSize = SLIDER_MAX_BRUSH_SIZE;
-  readonly textFonts = TEXT_FONT_OPTIONS;
-  readonly textFontSizePresets = TEXT_FONT_SIZE_PRESETS;
-  readonly minTextFontSize = MIN_TEXT_FONT_SIZE;
-  readonly maxTextFontSize = MAX_TEXT_FONT_SIZE;
-  readonly fontSizeMenuOpen = signal(false);
-
-  private readonly fontSizeCombo = viewChild<ElementRef<HTMLElement>>('fontSizeCombo');
-
-  constructor() {
-    effect(() => {
-      if (this.editorState.activeTool() !== 'text') {
-        this.fontSizeMenuOpen.set(false);
-      }
-    });
-  }
 
   selectTool(toolId: ToolId): void {
     this.canvasDoc.selectTool(toolId);
@@ -66,6 +40,18 @@ export class Toolbar {
 
   selectColor(color: string): void {
     this.editorState.setForegroundColor(color);
+  }
+
+  selectShapeColorSlot(slot: ShapeColorSlot): void {
+    this.editorState.setActiveShapeColorSlot(slot);
+  }
+
+  selectShapeColor(color: string): void {
+    this.editorState.setActiveShapeColor(color);
+  }
+
+  isTransparentColor(color: string): boolean {
+    return color.trim().toLowerCase() === TRANSPARENT_COLOR;
   }
 
   sliderValue(size: number): number {
@@ -90,83 +76,14 @@ export class Toolbar {
 
   onSizeTextCommit(tool: BrushToolId, event: Event): void {
     const input = event.target as HTMLInputElement;
-    const parsed = this.parseCommitNumber(input.value);
-    if (parsed !== null) {
-      this.applyBrushSize(tool, parsed);
+    const trimmed = input.value.trim();
+    if (trimmed !== '') {
+      const parsed = Number(trimmed);
+      if (Number.isFinite(parsed)) {
+        this.applyBrushSize(tool, parsed);
+      }
     }
     input.value = String(this.currentBrushSize(tool));
-  }
-
-  onFontFamilyChange(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
-    this.editorState.setTextFontFamily(value);
-  }
-
-  onFontSizeInput(event: Event): void {
-    this.fontSizeMenuOpen.set(false);
-    const raw = (event.target as HTMLInputElement).value.trim();
-    if (!/^\d+$/.test(raw)) {
-      return;
-    }
-    const parsed = Number(raw);
-    if (parsed >= MIN_TEXT_FONT_SIZE) {
-      this.editorState.setTextFontSize(parsed);
-    }
-  }
-
-  onFontSizeCommit(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const parsed = this.parseCommitNumber(input.value);
-    if (parsed !== null) {
-      this.editorState.setTextFontSize(parsed);
-    }
-    input.value = String(this.editorState.textFontSize());
-    this.fontSizeMenuOpen.set(false);
-  }
-
-  toggleFontSizeMenu(): void {
-    this.fontSizeMenuOpen.update((open) => !open);
-  }
-
-  closeFontSizeMenu(): void {
-    this.fontSizeMenuOpen.set(false);
-  }
-
-  selectFontSizePreset(size: number): void {
-    this.editorState.setTextFontSize(size);
-    this.fontSizeMenuOpen.set(false);
-  }
-
-  onDocumentPointerDown(event: PointerEvent): void {
-    if (!this.fontSizeMenuOpen()) {
-      return;
-    }
-    const combo = this.fontSizeCombo()?.nativeElement;
-    const target = event.target as Node | null;
-    if (combo && target && !combo.contains(target)) {
-      this.fontSizeMenuOpen.set(false);
-    }
-  }
-
-  toggleBold(): void {
-    this.editorState.toggleTextBold();
-  }
-
-  toggleItalic(): void {
-    this.editorState.toggleTextItalic();
-  }
-
-  toggleUnderline(): void {
-    this.editorState.toggleTextUnderline();
-  }
-
-  private parseCommitNumber(raw: string): number | null {
-    const trimmed = raw.trim();
-    if (trimmed === '') {
-      return null;
-    }
-    const parsed = Number(trimmed);
-    return Number.isFinite(parsed) ? parsed : null;
   }
 
   private applyBrushSize(tool: BrushToolId, size: number): void {

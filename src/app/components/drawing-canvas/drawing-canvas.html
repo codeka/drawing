@@ -15,6 +15,8 @@
       (pointerleave)="onPointerLeave()"
     ></canvas>
 
+    <canvas #previewCanvas class="preview-canvas" aria-hidden="true"></canvas>
+
     @if (brushPreview(); as preview) {
       <div class="brush-cursor-layer" aria-hidden="true">
         <div
@@ -37,6 +39,16 @@
       ></div>
     }
 
+    @if (editorState.shapeSelectionPreview(); as preview) {
+      <div
+        class="shape-preview-box"
+        [style.left.px]="preview.x"
+        [style.top.px]="preview.y"
+        [style.width.px]="preview.width"
+        [style.height.px]="preview.height"
+      ></div>
+    }
+
     @if (editorState.activeTextDraft(); as draft) {
       <app-text-overlay
         [draft]="draft"
@@ -44,6 +56,17 @@
         [canvasHeight]="editorState.canvasHeight()"
         (draftChange)="editorState.updateTextDraft($event)"
         (toggleStyle)="onToggleTextStyle($event)"
+        (commit)="canvasDoc.commitActiveEdit()"
+        (cancel)="canvasDoc.cancelActiveEdit()"
+      />
+    }
+
+    @if (editorState.activeShapeDraft(); as shapeDraft) {
+      <app-shape-overlay
+        [draft]="shapeDraft"
+        [canvasWidth]="editorState.canvasWidth()"
+        [canvasHeight]="editorState.canvasHeight()"
+        (draftChange)="editorState.updateShapeDraft($event)"
         (commit)="canvasDoc.commitActiveEdit()"
         (cancel)="canvasDoc.cancelActiveEdit()"
       />

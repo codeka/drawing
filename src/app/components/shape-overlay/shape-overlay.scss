@@ -1,0 +1,73 @@
+.shape-overlay {
+  position: absolute;
+  outline: 1px dashed var(--accent);
+  outline-offset: -1px;
+  background: transparent;
+  z-index: 10;
+}
+
+.shape-body {
+  width: 100%;
+  height: 100%;
+  cursor: move;
+  touch-action: none;
+}
+
+.resize-handle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #ffffff;
+  border: 1px solid var(--accent);
+  touch-action: none;
+}
+
+.handle-nw { top: -4px; left: -4px; cursor: nwse-resize; }
+.handle-n  { top: -4px; left: calc(50% - 4px); cursor: ns-resize; }
+.handle-ne { top: -4px; right: -4px; cursor: nesw-resize; }
+.handle-e  { top: calc(50% - 4px); right: -4px; cursor: ew-resize; }
+.handle-se { bottom: -4px; right: -4px; cursor: nwse-resize; }
+.handle-s  { bottom: -4px; left: calc(50% - 4px); cursor: ns-resize; }
+.handle-sw { bottom: -4px; left: -4px; cursor: nesw-resize; }
+.handle-w  { top: calc(50% - 4px); left: -4px; cursor: ew-resize; }
+
+.action-pill {
+  position: absolute;
+  top: -32px;
+  right: 0;
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.16);
+
+  &.below {
+    top: auto;
+    bottom: -32px;
+  }
+}
+
+.action-btn {
+  padding: 2px 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+  background: var(--bg-app);
+  font-size: 11.5px;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--hover-bg);
+  }
+}
+
+.apply-btn {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+
+  &:hover {
+    background: #1d4ed8;
+  }
+}

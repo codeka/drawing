@@ -3,7 +3,14 @@ import {
   DEFAULT_CANVAS_HEIGHT,
   DEFAULT_CANVAS_WIDTH,
   DEFAULT_ERASER_SIZE,
+  DEFAULT_LINE_END_CAP,
+  DEFAULT_LINE_START_CAP,
+  DEFAULT_LINE_WIDTH,
   DEFAULT_PENCIL_SIZE,
+  DEFAULT_SHAPE_FILL_COLOR,
+  DEFAULT_SHAPE_OUTLINE_COLOR,
+  DEFAULT_SHAPE_OUTLINE_WIDTH,
+  DEFAULT_SHAPE_TYPE,
   DEFAULT_TEXT_FONT_FAMILY,
   DEFAULT_TEXT_FONT_SIZE,
   MAX_BRUSH_SIZE,
@@ -152,5 +159,74 @@ describe('EditorStateService', () => {
 
     service.setEraserSize(-5);
     expect(service.eraserSize()).toBe(MIN_BRUSH_SIZE);
+  });
+
+  it('initializes line and shape defaults, clamps widths, and updates activeShapeDraft live', () => {
+    expect(service.lineWidth()).toBe(DEFAULT_LINE_WIDTH);
+    expect(service.lineStartCap()).toBe(DEFAULT_LINE_START_CAP);
+    expect(service.lineEndCap()).toBe(DEFAULT_LINE_END_CAP);
+    expect(service.activeLineCapSlot()).toBe('end');
+    expect(service.activeLineCap()).toBe(DEFAULT_LINE_END_CAP);
+    expect(service.shapeType()).toBe(DEFAULT_SHAPE_TYPE);
+    expect(service.shapeOutlineWidth()).toBe(DEFAULT_SHAPE_OUTLINE_WIDTH);
+    expect(service.shapeOutlineColor()).toBe(DEFAULT_SHAPE_OUTLINE_COLOR);
+    expect(service.shapeFillColor()).toBe(DEFAULT_SHAPE_FILL_COLOR);
+    expect(service.shapeInstant()).toBe(false);
+    expect(service.activeShapeColorSlot()).toBe('outline');
+    expect(service.activeShapeDraft()).toBeNull();
+
+    service.setShapeInstant(true);
+    expect(service.shapeInstant()).toBe(true);
+    service.setShapeInstant(false);
+    expect(service.shapeInstant()).toBe(false);
+
+    service.setLineWidth(0);
+    expect(service.lineWidth()).toBe(MIN_BRUSH_SIZE);
+    service.setLineWidth(999);
+    expect(service.lineWidth()).toBe(MAX_BRUSH_SIZE);
+    service.setLineWidth(Number.NaN);
+    expect(service.lineWidth()).toBe(MAX_BRUSH_SIZE);
+    service.setActiveLineCap('stealth-arrow');
+    expect(service.lineEndCap()).toBe('stealth-arrow');
+    expect(service.lineStartCap()).toBe(DEFAULT_LINE_START_CAP);
+    service.setActiveLineCapSlot('start');
+    service.setActiveLineCap('circle');
+    expect(service.lineStartCap()).toBe('circle');
+    expect(service.activeLineCap()).toBe('circle');
+    service.setLineStartCap('arrow');
+    expect(service.lineStartCap()).toBe('arrow');
+    service.setLineEndCap('hollow-arrow');
+    expect(service.lineEndCap()).toBe('hollow-arrow');
+
+    service.activeShapeDraft.set({
+      rect: { x: 10, y: 20, width: 140, height: 140 },
+      shapeType: DEFAULT_SHAPE_TYPE,
+      outlineWidth: DEFAULT_SHAPE_OUTLINE_WIDTH,
+      outlineColor: DEFAULT_SHAPE_OUTLINE_COLOR,
+      fillColor: DEFAULT_SHAPE_FILL_COLOR,
+    });
+
+    service.setShapeType('heart');
+    service.setShapeOutlineWidth(12);
+    service.setActiveShapeColor('#ed1c24');
+    service.setActiveShapeColorSlot('fill');
+    service.setActiveShapeColor('#23cc56');
+
+    expect(service.shapeType()).toBe('heart');
+    expect(service.shapeOutlineWidth()).toBe(12);
+    expect(service.shapeOutlineColor()).toBe('#ed1c24');
+    expect(service.shapeFillColor()).toBe('#23cc56');
+    expect(service.activeShapeDraft()).toEqual({
+      rect: { x: 10, y: 20, width: 140, height: 140 },
+      shapeType: 'heart',
+      outlineWidth: 12,
+      outlineColor: '#ed1c24',
+      fillColor: '#23cc56',
+    });
+
+    service.setShapeOutlineWidth(0);
+    expect(service.shapeOutlineWidth()).toBe(MIN_BRUSH_SIZE);
+    service.setShapeOutlineWidth(Number.NaN);
+    expect(service.shapeOutlineWidth()).toBe(MIN_BRUSH_SIZE);
   });
 });

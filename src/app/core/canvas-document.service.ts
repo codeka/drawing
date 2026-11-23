@@ -7,6 +7,7 @@ import {
   ToolId,
   TRANSPARENT_COLOR,
 } from '../models/tool.model';
+import { renderShapeToCanvas } from '../tools/shape-renderer';
 import { bakeTextToCanvas } from '../tools/text-renderer';
 import { EditorStateService } from './editor-state.service';
 import { DEFAULT_FILE_NAME, extractFileBaseName, normalizePngFileName } from './file-name';
@@ -40,27 +41,42 @@ export class CanvasDocumentService {
     if (this.editorState.activeTool() === toolId) {
       return;
     }
-    if (this.editorState.activeTextDraft() !== null) {
+    if (
+      this.editorState.activeTextDraft() !== null ||
+      this.editorState.activeShapeDraft() !== null
+    ) {
       this.commitActiveEdit();
     }
     this.editorState.textSelectionPreview.set(null);
+    this.editorState.shapeSelectionPreview.set(null);
+    this.editorState.linePreview.set(null);
     this.editorState.activeTool.set(toolId);
   }
 
   commitActiveEdit(): void {
-    const draft = this.editorState.activeTextDraft();
-    if (!draft) {
-      return;
+    const textDraft = this.editorState.activeTextDraft();
+    if (textDraft) {
+      if (this.ctx) {
+        bakeTextToCanvas(this.ctx, textDraft);
+      }
+      this.editorState.clearTextDraft();
     }
-    if (this.ctx) {
-      bakeTextToCanvas(this.ctx, draft);
+
+    const shapeDraft = this.editorState.activeShapeDraft();
+    if (shapeDraft) {
+      if (this.ctx) {
+        renderShapeToCanvas(this.ctx, shapeDraft);
+      }
+      this.editorState.clearShapeDraft();
     }
-    this.editorState.clearTextDraft();
   }
 
   cancelActiveEdit(): void {
     this.editorState.textSelectionPreview.set(null);
+    this.editorState.shapeSelectionPreview.set(null);
+    this.editorState.linePreview.set(null);
     this.editorState.clearTextDraft();
+    this.editorState.clearShapeDraft();
   }
 
   newDocument(

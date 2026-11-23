@@ -1,0 +1,47 @@
+<div
+  class="shape-overlay"
+  [style.left.px]="draft().rect.x"
+  [style.top.px]="draft().rect.y"
+  [style.width.px]="draft().rect.width"
+  [style.height.px]="draft().rect.height"
+  (pointerdown)="onOverlayPointerDown($event)"
+>
+  <div
+    class="shape-body"
+    title="Drag to move shape"
+    (pointerdown)="onBodyPointerDown($event)"
+    (pointermove)="onInteractionPointerMove($event)"
+    (pointerup)="onInteractionPointerUp($event)"
+    (pointercancel)="onInteractionPointerUp($event)"
+  ></div>
+
+  @for (handle of handles; track handle) {
+    <div
+      class="resize-handle"
+      [class]="'resize-handle handle-' + handle"
+      (pointerdown)="onHandlePointerDown(handle, $event)"
+      (pointermove)="onInteractionPointerMove($event)"
+      (pointerup)="onInteractionPointerUp($event)"
+      (pointercancel)="onInteractionPointerUp($event)"
+    ></div>
+  }
+
+  <div class="action-pill" [class.below]="placeActionsBelow()">
+    <button
+      type="button"
+      class="action-btn apply-btn"
+      title="Apply shape (Enter)"
+      (click)="commit.emit()"
+    >
+      Apply
+    </button>
+    <button
+      type="button"
+      class="action-btn cancel-btn"
+      title="Cancel shape (Esc)"
+      (click)="cancel.emit()"
+    >
+      Cancel
+    </button>
+  </div>
+</div>

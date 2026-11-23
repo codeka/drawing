@@ -17,7 +17,7 @@ describe('App', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('renders File, Edit, and View menus, all 4 tools, canvas, and 1280x1024 status', async () => {
+  it('renders File, Edit, and View menus, all 6 tools, canvas, and 1280x1024 status', async () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -32,7 +32,7 @@ describe('App', () => {
     const toolButtons = Array.from(compiled.querySelectorAll('.tool-btn')).map((el) =>
       el.getAttribute('aria-label'),
     );
-    expect(toolButtons).toEqual(['Pencil', 'Fill', 'Eraser', 'Text']);
+    expect(toolButtons).toEqual(['Pencil', 'Fill', 'Eraser', 'Text', 'Line', 'Shapes']);
 
     const canvas = compiled.querySelector('canvas');
     expect(canvas).toBeTruthy();
@@ -187,7 +187,7 @@ describe('App', () => {
     expect(textarea.style.textDecoration).toBe('none');
   });
 
-  it('renders independent size slider and number input for Pencil (1px) and Eraser (10px)', async () => {
+  it('renders independent size slider and number input for Pencil (8px) and Eraser (10px)', async () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -197,8 +197,13 @@ describe('App', () => {
 
     const slider = compiled.querySelector('.size-slider') as HTMLInputElement;
     const numberInput = compiled.querySelector('.size-number-input') as HTMLInputElement;
-    expect(slider.value).toBe('1');
-    expect(numberInput.value).toBe('1');
+    expect(slider.value).toBe('8');
+    expect(numberInput.value).toBe('8');
+
+    const sizeOption = compiled.querySelector('.size-option') as HTMLElement;
+    expect(sizeOption.firstElementChild?.classList.contains('size-slider')).toBe(true);
+    expect(sizeOption.children[1]?.classList.contains('size-row')).toBe(true);
+    expect(sizeOption.children[1]?.querySelector('.size-number-input')).toBeTruthy();
 
     numberInput.value = '18';
     numberInput.dispatchEvent(new Event('input'));
@@ -238,10 +243,10 @@ describe('App', () => {
 
     let cursorEl = compiled.querySelector('.brush-cursor') as HTMLElement;
     expect(cursorEl).toBeTruthy();
-    expect(cursorEl.style.left).toBe('100px');
-    expect(cursorEl.style.top).toBe('50px');
-    expect(cursorEl.style.width).toBe('1px');
-    expect(cursorEl.style.height).toBe('1px');
+    expect(cursorEl.style.left).toBe('96px');
+    expect(cursorEl.style.top).toBe('46px');
+    expect(cursorEl.style.width).toBe('8px');
+    expect(cursorEl.style.height).toBe('8px');
 
     const eraserBtn = compiled.querySelector('button[aria-label="Eraser"]') as HTMLButtonElement;
     eraserBtn.click();
@@ -263,6 +268,232 @@ describe('App', () => {
     textBtn.click();
     fixture.detectChanges();
     expect(compiled.querySelector('.brush-cursor')).toBeNull();
+
+    const lineBtn = compiled.querySelector('button[aria-label="Line"]') as HTMLButtonElement;
+    lineBtn.click();
+    fixture.detectChanges();
+    expect(compiled.querySelector('.brush-cursor')).toBeNull();
+
+    const shapesBtn = compiled.querySelector('button[aria-label="Shapes"]') as HTMLButtonElement;
+    shapesBtn.click();
+    fixture.detectChanges();
+    expect(compiled.querySelector('.brush-cursor')).toBeNull();
+  });
+
+  it('supports Line tool options, thickness default (8px), independent Start/End caps, and L shortcut', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const editorState = TestBed.inject(EditorStateService);
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'l' }));
+    fixture.detectChanges();
+
+    expect(editorState.activeTool()).toBe('line');
+    expect(compiled.querySelector('.options-group .group-label')?.textContent?.trim()).toBe(
+      'Line Options',
+    );
+
+    const thicknessOption = compiled.querySelector('.thickness-option') as HTMLElement;
+    expect(thicknessOption.firstElementChild?.classList.contains('size-slider')).toBe(true);
+    expect(thicknessOption.children[1]?.classList.contains('size-row')).toBe(true);
+    expect(thicknessOption.children[1]?.querySelector('.size-number-input')).toBeTruthy();
+
+    const thicknessInput = compiled.querySelector(
+      'input[aria-label="Line thickness in pixels"]',
+    ) as HTMLInputElement;
+    expect(thicknessInput.value).toBe('8');
+
+    const startSlotBtn = compiled.querySelector('button[aria-label="Start cap"]') as HTMLButtonElement;
+    const endSlotBtn = compiled.querySelector('button[aria-label="End cap"]') as HTMLButtonElement;
+    expect(startSlotBtn.classList.contains('active')).toBe(false);
+    expect(endSlotBtn.classList.contains('active')).toBe(true);
+
+    const capBtns = compiled.querySelectorAll('.cap-btn');
+    expect(capBtns.length).toBe(10);
+
+    const roundBtn = compiled.querySelector('button[aria-label="Round"]') as HTMLButtonElement;
+    expect(roundBtn.classList.contains('active')).toBe(true);
+
+    thicknessInput.value = '14';
+    thicknessInput.dispatchEvent(new Event('input'));
+    const arrowBtn = compiled.querySelector('button[aria-label="Arrow"]') as HTMLButtonElement;
+    arrowBtn.click();
+    fixture.detectChanges();
+
+    expect(editorState.lineWidth()).toBe(14);
+    expect(editorState.lineEndCap()).toBe('arrow');
+    expect(arrowBtn.classList.contains('active')).toBe(true);
+
+    startSlotBtn.click();
+    fixture.detectChanges();
+    expect(startSlotBtn.classList.contains('active')).toBe(true);
+    expect(endSlotBtn.classList.contains('active')).toBe(false);
+    expect(roundBtn.classList.contains('active')).toBe(true);
+
+    const circleBtn = compiled.querySelector('button[aria-label="Circle"]') as HTMLButtonElement;
+    circleBtn.click();
+    fixture.detectChanges();
+    expect(editorState.lineStartCap()).toBe('circle');
+    expect(editorState.lineEndCap()).toBe('arrow');
+    expect(circleBtn.classList.contains('active')).toBe(true);
+  });
+
+  it('supports Shapes tool options, separate Outline/Fill colors, transparent outline, and staged overlay', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const editorState = TestBed.inject(EditorStateService);
+    const canvasDoc = TestBed.inject(CanvasDocumentService);
+    const commitSpy = vi.spyOn(canvasDoc, 'commitActiveEdit');
+    const cancelSpy = vi.spyOn(canvasDoc, 'cancelActiveEdit');
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 's' }));
+    fixture.detectChanges();
+
+    expect(editorState.activeTool()).toBe('shapes');
+    expect(compiled.querySelector('.options-group .group-label')?.textContent?.trim()).toBe(
+      'Shapes Options',
+    );
+    expect(compiled.querySelector('.colors-group .group-label')?.textContent?.trim()).toBe(
+      'Outline Color',
+    );
+
+    const outlineOption = compiled.querySelector('.outline-option') as HTMLElement;
+    expect(outlineOption.firstElementChild?.classList.contains('size-slider')).toBe(true);
+    expect(outlineOption.children[1]?.classList.contains('size-row')).toBe(true);
+    expect(outlineOption.children[1]?.querySelector('.size-number-input')).toBeTruthy();
+
+    const outlineInput = compiled.querySelector(
+      'input[aria-label="Outline width in pixels"]',
+    ) as HTMLInputElement;
+    expect(outlineInput.value).toBe('8');
+    expect(compiled.querySelectorAll('.shape-btn').length).toBe(10);
+
+    const slotButtons = Array.from(compiled.querySelectorAll('.color-slot-btn')) as HTMLButtonElement[];
+    expect(slotButtons).toHaveLength(2);
+    expect(slotButtons[0].classList.contains('active')).toBe(true);
+    expect(editorState.shapeOutlineColor()).toBe('#000000');
+    expect(editorState.shapeFillColor()).toBe(TRANSPARENT_COLOR);
+
+    // Stage a shape draft
+    editorState.activeShapeDraft.set({
+      rect: { x: 40, y: 50, width: 140, height: 140 },
+      shapeType: editorState.shapeType(),
+      outlineWidth: editorState.shapeOutlineWidth(),
+      outlineColor: editorState.shapeOutlineColor(),
+      fillColor: editorState.shapeFillColor(),
+    });
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('app-shape-overlay')).toBeTruthy();
+
+    // Update shape type, outline width, and switch outline to transparent & fill to red
+    const starBtn = compiled.querySelector('button[aria-label="Star"]') as HTMLButtonElement;
+    starBtn.click();
+    outlineInput.value = '12';
+    outlineInput.dispatchEvent(new Event('input'));
+    const transparentBtn = compiled.querySelector('.transparent-btn') as HTMLButtonElement;
+    transparentBtn.click();
+    slotButtons[1].click();
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('.colors-group .group-label')?.textContent?.trim()).toBe(
+      'Fill Color',
+    );
+
+    const redBtn = compiled.querySelector(
+      '.colors-group button[aria-label="Select color #ed1c24"]',
+    ) as HTMLButtonElement;
+    redBtn.click();
+    fixture.detectChanges();
+
+    expect(editorState.activeShapeDraft()).toMatchObject({
+      shapeType: 'star',
+      outlineWidth: 12,
+      outlineColor: TRANSPARENT_COLOR,
+      fillColor: '#ed1c24',
+    });
+
+    // Apply via overlay Apply button
+    const applyBtn = compiled.querySelector('app-shape-overlay .apply-btn') as HTMLButtonElement;
+    applyBtn.click();
+    fixture.detectChanges();
+    expect(commitSpy).toHaveBeenCalledTimes(1);
+    expect(editorState.activeShapeDraft()).toBeNull();
+
+    // Stage again and verify Escape cancels and Enter commits
+    editorState.activeShapeDraft.set({
+      rect: { x: 40, y: 50, width: 140, height: 140 },
+      shapeType: 'heart',
+      outlineWidth: 8,
+      outlineColor: '#000000',
+      fillColor: TRANSPARENT_COLOR,
+    });
+    fixture.detectChanges();
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    expect(cancelSpy).toHaveBeenCalledTimes(1);
+    expect(editorState.activeShapeDraft()).toBeNull();
+
+    editorState.activeShapeDraft.set({
+      rect: { x: 40, y: 50, width: 140, height: 140 },
+      shapeType: 'plus',
+      outlineWidth: 8,
+      outlineColor: '#000000',
+      fillColor: TRANSPARENT_COLOR,
+    });
+    fixture.detectChanges();
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    fixture.detectChanges();
+    expect(commitSpy).toHaveBeenCalledTimes(2);
+    expect(editorState.activeShapeDraft()).toBeNull();
+  });
+
+  it('supports Instant checkbox on Shapes tool and commits active draft when enabled', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const editorState = TestBed.inject(EditorStateService);
+    const canvasDoc = TestBed.inject(CanvasDocumentService);
+    const commitSpy = vi.spyOn(canvasDoc, 'commitActiveEdit');
+
+    const shapesBtn = compiled.querySelector('button[aria-label="Shapes"]') as HTMLButtonElement;
+    shapesBtn.click();
+    fixture.detectChanges();
+
+    const instantCheckbox = compiled.querySelector('.instant-checkbox') as HTMLInputElement;
+    expect(instantCheckbox).toBeTruthy();
+    expect(instantCheckbox.checked).toBe(false);
+    expect(editorState.shapeInstant()).toBe(false);
+
+    editorState.activeShapeDraft.set({
+      rect: { x: 20, y: 20, width: 100, height: 100 },
+      shapeType: 'rectangle',
+      outlineWidth: 8,
+      outlineColor: '#000000',
+      fillColor: TRANSPARENT_COLOR,
+    });
+    fixture.detectChanges();
+
+    instantCheckbox.click();
+    fixture.detectChanges();
+
+    expect(instantCheckbox.checked).toBe(true);
+    expect(editorState.shapeInstant()).toBe(true);
+    expect(commitSpy).toHaveBeenCalledTimes(1);
+    expect(editorState.activeShapeDraft()).toBeNull();
+
+    instantCheckbox.click();
+    fixture.detectChanges();
+    expect(instantCheckbox.checked).toBe(false);
+    expect(editorState.shapeInstant()).toBe(false);
   });
 
   it('opens New Image dialog from File -> New..., suppresses tool shortcuts, and cancels cleanly', async () => {

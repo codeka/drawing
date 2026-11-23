@@ -1,0 +1,149 @@
+<ng-template #capSvg let-cap="cap" let-flipped="flipped">
+  <svg class="cap-icon" [class.flipped]="flipped" viewBox="0 0 24 12" aria-hidden="true">
+    @switch (cap) {
+      @case ('round') {
+        <line x1="3" y1="6" x2="20" y2="6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
+      }
+      @case ('flat') {
+        <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2.4" stroke-linecap="butt" />
+      }
+      @case ('arrow') {
+        <line x1="3" y1="6" x2="15" y2="6" stroke="currentColor" stroke-width="2" />
+        <polygon points="21,6 14,2 14,10" fill="currentColor" />
+      }
+      @case ('open-arrow') {
+        <line x1="3" y1="6" x2="19" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        <polyline
+          points="14,2.2 20,6 14,9.8"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      }
+      @case ('stealth-arrow') {
+        <line x1="3" y1="6" x2="16" y2="6" stroke="currentColor" stroke-width="2" />
+        <polygon points="21.5,6 13,2 15.6,6 13,10" fill="currentColor" />
+      }
+      @case ('hollow-arrow') {
+        <line x1="3" y1="6" x2="14" y2="6" stroke="currentColor" stroke-width="2" />
+        <polygon
+          points="20.5,6 14,2.4 14,9.6"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linejoin="round"
+        />
+      }
+      @case ('circle') {
+        <line x1="3" y1="6" x2="17.5" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        <circle cx="18" cy="6" r="3.4" fill="currentColor" />
+      }
+      @case ('square') {
+        <line x1="3" y1="6" x2="17" y2="6" stroke="currentColor" stroke-width="2" />
+        <rect x="14.8" y="2.8" width="6.4" height="6.4" fill="currentColor" />
+      }
+      @case ('diamond') {
+        <line x1="3" y1="6" x2="17" y2="6" stroke="currentColor" stroke-width="2" />
+        <polygon points="18,2 22,6 18,10 14,6" fill="currentColor" />
+      }
+      @case ('bar') {
+        <line x1="3" y1="6" x2="19" y2="6" stroke="currentColor" stroke-width="2" />
+        <rect x="18.5" y="1.6" width="2.4" height="8.8" fill="currentColor" />
+      }
+    }
+  </svg>
+</ng-template>
+
+<div class="line-options">
+  <div class="thickness-option">
+    <input
+      type="range"
+      class="size-slider"
+      [min]="minBrushSize"
+      [max]="sliderMaxBrushSize"
+      step="1"
+      [value]="sliderValue(editorState.lineWidth())"
+      (input)="onThicknessSliderInput($event)"
+      aria-label="Line thickness slider"
+    />
+    <div class="size-row">
+      <label class="option-label" for="line-thickness-input">Thickness</label>
+      <div class="size-input-wrap">
+        <input
+          id="line-thickness-input"
+          type="number"
+          class="size-number-input"
+          [min]="minBrushSize"
+          [max]="maxBrushSize"
+          step="1"
+          [value]="editorState.lineWidth()"
+          (input)="onThicknessTextInput($event)"
+          (blur)="onThicknessTextCommit($event)"
+          (keydown.enter)="onThicknessTextCommit($event)"
+          aria-label="Line thickness in pixels"
+        />
+        <span class="size-unit">px</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub-divider" aria-hidden="true"></div>
+
+  <div class="cap-slots" role="group" aria-label="Line cap target">
+    <button
+      type="button"
+      class="cap-slot-btn"
+      [class.active]="editorState.activeLineCapSlot() === 'start'"
+      [attr.aria-pressed]="editorState.activeLineCapSlot() === 'start'"
+      aria-label="Start cap"
+      (click)="selectCapSlot('start')"
+    >
+      <span>Start</span>
+      <ng-container
+        *ngTemplateOutlet="capSvg; context: { cap: editorState.lineStartCap(), flipped: true }"
+      />
+    </button>
+    <button
+      type="button"
+      class="cap-slot-btn"
+      [class.active]="editorState.activeLineCapSlot() === 'end'"
+      [attr.aria-pressed]="editorState.activeLineCapSlot() === 'end'"
+      aria-label="End cap"
+      (click)="selectCapSlot('end')"
+    >
+      <span>End</span>
+      <ng-container
+        *ngTemplateOutlet="capSvg; context: { cap: editorState.lineEndCap(), flipped: false }"
+      />
+    </button>
+  </div>
+
+  <div
+    class="cap-grid"
+    role="group"
+    [attr.aria-label]="
+      editorState.activeLineCapSlot() === 'start' ? 'Line start cap' : 'Line end cap'
+    "
+  >
+    @for (cap of caps; track cap.id) {
+      <button
+        type="button"
+        class="cap-btn"
+        [class.active]="editorState.activeLineCap() === cap.id"
+        [attr.aria-pressed]="editorState.activeLineCap() === cap.id"
+        [attr.aria-label]="cap.label"
+        [title]="cap.label"
+        (click)="selectCap(cap.id)"
+      >
+        <ng-container
+          *ngTemplateOutlet="
+            capSvg;
+            context: { cap: cap.id, flipped: editorState.activeLineCapSlot() === 'start' }
+          "
+        />
+      </button>
+    }
+  </div>
+</div>

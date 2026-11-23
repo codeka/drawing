@@ -47,19 +47,19 @@ describe('NewImageDialog', () => {
     heightInput.dispatchEvent(new Event('input'));
 
     const blueSwatch = compiled.querySelector(
-      'button[aria-label="Select color #00a2e8"]',
+      'button[aria-label="Select color #3f48d1"]',
     ) as HTMLButtonElement;
     blueSwatch.click();
     fixture.detectChanges();
 
-    expect(compiled.querySelector('.fill-value')?.textContent?.trim()).toBe('#00A2E8');
+    expect(compiled.querySelector('.fill-value')?.textContent?.trim()).toBe('#3F48D1');
 
     const form = compiled.querySelector('.dialog-form') as HTMLFormElement;
     form.dispatchEvent(new Event('submit'));
     fixture.detectChanges();
 
     expect(fixture.componentInstance.created).toEqual([
-      { width: 800, height: 600, fillColor: '#00a2e8' },
+      { width: 800, height: 600, fillColor: '#3f48d1' },
     ]);
   });
 

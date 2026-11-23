@@ -19,11 +19,18 @@ describe('CanvasDocumentService', () => {
     save: ReturnType<typeof vi.fn>;
     restore: ReturnType<typeof vi.fn>;
     beginPath: ReturnType<typeof vi.fn>;
+    closePath: ReturnType<typeof vi.fn>;
     rect: ReturnType<typeof vi.fn>;
     clip: ReturnType<typeof vi.fn>;
+    fill: ReturnType<typeof vi.fn>;
+    stroke: ReturnType<typeof vi.fn>;
     measureText: ReturnType<typeof vi.fn>;
     fillText: ReturnType<typeof vi.fn>;
     fillStyle: string;
+    strokeStyle: string;
+    lineWidth: number;
+    lineJoin: CanvasLineJoin;
+    miterLimit: number;
     font: string;
     textBaseline: CanvasTextBaseline;
   };
@@ -40,11 +47,18 @@ describe('CanvasDocumentService', () => {
       save: vi.fn(),
       restore: vi.fn(),
       beginPath: vi.fn(),
+      closePath: vi.fn(),
       rect: vi.fn(),
       clip: vi.fn(),
+      fill: vi.fn(),
+      stroke: vi.fn(),
       measureText: vi.fn((text: string) => ({ width: text.length * 8 })),
       fillText: vi.fn(),
       fillStyle: '#000000',
+      strokeStyle: '#000000',
+      lineWidth: 1,
+      lineJoin: 'miter',
+      miterLimit: 10,
       font: '24px sans-serif',
       textBaseline: 'alphabetic',
     };
@@ -178,6 +192,18 @@ describe('CanvasDocumentService', () => {
       service.saveImage();
       expect(editorState.fileName()).toBe('landscape.png');
       expect(createdAnchors[2].download).toBe('landscape.png');
+
+      editorState.activeShapeDraft.set({
+        rect: { x: 10, y: 10, width: 80, height: 60 },
+        shapeType: 'rectangle',
+        outlineWidth: 8,
+        outlineColor: '#ed1c24',
+        fillColor: '#3f48d1',
+      });
+      service.saveImage('with-shape');
+      expect(editorState.activeShapeDraft()).toBeNull();
+      expect(mockCtx.fill).toHaveBeenCalledTimes(1);
+      expect(mockCtx.stroke).toHaveBeenCalledTimes(1);
     } finally {
       Object.defineProperty(URL, 'createObjectURL', {
         configurable: true,
@@ -190,5 +216,43 @@ describe('CanvasDocumentService', () => {
         value: originalRevokeObjectUrl,
       });
     }
+  });
+
+  it('commits activeShapeDraft on tool switch and clears shape/line previews on cancelActiveEdit', () => {
+    editorState.activeTool.set('shapes');
+    editorState.activeShapeDraft.set({
+      rect: { x: 10, y: 20, width: 100, height: 80 },
+      shapeType: 'rectangle',
+      outlineWidth: 8,
+      outlineColor: '#000000',
+      fillColor: TRANSPARENT_COLOR,
+    });
+    editorState.shapeSelectionPreview.set({ x: 0, y: 0, width: 50, height: 50 });
+
+    service.selectTool('line');
+    expect(editorState.activeTool()).toBe('line');
+    expect(editorState.activeShapeDraft()).toBeNull();
+    expect(editorState.shapeSelectionPreview()).toBeNull();
+    expect(mockCtx.stroke).toHaveBeenCalledTimes(1);
+
+    editorState.linePreview.set({
+      start: { x: 0, y: 0 },
+      end: { x: 40, y: 40 },
+      color: '#000000',
+      thickness: 8,
+      startCap: 'round',
+      endCap: 'round',
+    });
+    editorState.activeShapeDraft.set({
+      rect: { x: 20, y: 20, width: 80, height: 80 },
+      shapeType: 'rectangle',
+      outlineWidth: 8,
+      outlineColor: '#000000',
+      fillColor: TRANSPARENT_COLOR,
+    });
+    service.cancelActiveEdit();
+    expect(editorState.linePreview()).toBeNull();
+    expect(editorState.activeShapeDraft()).toBeNull();
+    expect(mockCtx.stroke).toHaveBeenCalledTimes(1);
   });
 });
