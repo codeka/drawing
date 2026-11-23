@@ -1,0 +1,102 @@
+<div
+  class="dialog-backdrop"
+  (pointerdown)="onBackdropPointerDown($event)"
+  (click)="onBackdropClick($event)"
+>
+  <div
+    class="dialog-card"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="new-image-dialog-title"
+  >
+    <header class="dialog-header">
+      <h2 id="new-image-dialog-title" class="dialog-title">New Image</h2>
+      <button
+        type="button"
+        class="close-btn"
+        aria-label="Close dialog"
+        (click)="cancel.emit()"
+      >
+        ×
+      </button>
+    </header>
+
+    <form class="dialog-form" (submit)="onSubmit($event)" novalidate>
+      <div class="dialog-body">
+        <div class="dialog-section">
+          <div class="section-header">
+            <span class="section-title">Image Size</span>
+          </div>
+          <div class="dimensions-row">
+            <div class="dimension-field">
+              <label class="field-label" for="new-image-width">Width</label>
+              <div class="input-with-unit">
+                <input
+                  #widthInput
+                  id="new-image-width"
+                  type="number"
+                  class="dimension-input"
+                  [class.invalid]="!isWidthValid()"
+                  [min]="minCanvasSize"
+                  [max]="maxCanvasSize"
+                  step="1"
+                  inputmode="numeric"
+                  [attr.aria-invalid]="!isWidthValid()"
+                  [value]="widthText()"
+                  (input)="onWidthInput($event)"
+                />
+                <span class="unit">px</span>
+              </div>
+            </div>
+
+            <span class="dimension-sep" aria-hidden="true">×</span>
+
+            <div class="dimension-field">
+              <label class="field-label" for="new-image-height">Height</label>
+              <div class="input-with-unit">
+                <input
+                  id="new-image-height"
+                  type="number"
+                  class="dimension-input"
+                  [class.invalid]="!isHeightValid()"
+                  [min]="minCanvasSize"
+                  [max]="maxCanvasSize"
+                  step="1"
+                  inputmode="numeric"
+                  [attr.aria-invalid]="!isHeightValid()"
+                  [value]="heightText()"
+                  (input)="onHeightInput($event)"
+                />
+                <span class="unit">px</span>
+              </div>
+            </div>
+          </div>
+
+          @if (!isValid()) {
+            <p class="field-error" role="alert">
+              Enter whole numbers between {{ minCanvasSize }} and {{ maxCanvasSize }} px.
+            </p>
+          }
+        </div>
+
+        <div class="dialog-section">
+          <div class="section-header">
+            <span class="section-title">Fill Color</span>
+            <span class="fill-value">{{ fillColorLabel() }}</span>
+          </div>
+          <app-color-picker
+            [color]="fillColor()"
+            [allowTransparent]="true"
+            customColorLabel="Custom fill color"
+            (colorChange)="onFillColorChange($event)"
+          />
+        </div>
+      </div>
+
+      <footer class="dialog-footer">
+        <button type="button" class="dialog-btn" (click)="cancel.emit()">Cancel</button>
+        <button type="submit" class="dialog-btn primary" [disabled]="!isValid()">Create</button>
+      </footer>
+    </form>
+  </div>
+</div>

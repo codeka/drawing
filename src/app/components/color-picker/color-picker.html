@@ -1,0 +1,45 @@
+<div class="color-controls">
+  <label class="active-color-picker" title="Custom color">
+    <span
+      class="active-swatch"
+      [class.checkerboard]="isTransparent()"
+      [style.background-color]="isTransparent() ? null : color()"
+    ></span>
+    <input
+      type="color"
+      class="color-native-input"
+      [value]="nativeColorValue()"
+      (input)="onNativeColorInput($event)"
+      (change)="onNativeColorInput($event)"
+      [attr.aria-label]="customColorLabel()"
+    />
+  </label>
+
+  <div class="color-grid" role="group" aria-label="Preset colors">
+    @for (preset of presetColors; track preset) {
+      <button
+        type="button"
+        class="color-swatch"
+        [class.active]="isPresetActive(preset)"
+        [style.background-color]="preset"
+        [attr.aria-label]="'Select color ' + preset"
+        [title]="preset"
+        (click)="selectColor(preset)"
+      ></button>
+    }
+  </div>
+
+  @if (allowTransparent()) {
+    <button
+      type="button"
+      class="transparent-btn"
+      [class.active]="isTransparent()"
+      [attr.aria-pressed]="isTransparent()"
+      title="Transparent"
+      (click)="selectTransparent()"
+    >
+      <span class="transparent-swatch checkerboard" aria-hidden="true"></span>
+      <span>Transparent</span>
+    </button>
+  }
+</div>

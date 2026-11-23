@@ -1,0 +1,56 @@
+<div
+  class="dialog-backdrop"
+  (pointerdown)="onBackdropPointerDown($event)"
+  (click)="onBackdropClick($event)"
+>
+  <div
+    class="dialog-card"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="save-image-dialog-title"
+  >
+    <header class="dialog-header">
+      <h2 id="save-image-dialog-title" class="dialog-title">Save Image</h2>
+      <button
+        type="button"
+        class="close-btn"
+        aria-label="Close dialog"
+        (click)="cancel.emit()"
+      >
+        ×
+      </button>
+    </header>
+
+    <form class="dialog-form" (submit)="onSubmit($event)" novalidate>
+      <div class="dialog-body">
+        <div class="dialog-section">
+          <label class="field-label" for="save-image-filename">File Name</label>
+          <div class="input-with-unit">
+            <input
+              #fileNameInput
+              id="save-image-filename"
+              type="text"
+              class="filename-input"
+              autocomplete="off"
+              spellcheck="false"
+              [class.invalid]="!isValid()"
+              [attr.aria-invalid]="!isValid()"
+              [value]="fileNameText()"
+              (input)="onFileNameInput($event)"
+            />
+            <span class="unit">.png</span>
+          </div>
+
+          @if (errorMessage(); as err) {
+            <p class="field-error" role="alert">{{ err }}</p>
+          }
+        </div>
+      </div>
+
+      <footer class="dialog-footer">
+        <button type="button" class="dialog-btn" (click)="cancel.emit()">Cancel</button>
+        <button type="submit" class="dialog-btn primary" [disabled]="!isValid()">Save</button>
+      </footer>
+    </form>
+  </div>
+</div>

@@ -3,6 +3,7 @@ import {
   Component,
   ElementRef,
   inject,
+  output,
   signal,
   viewChild,
 } from '@angular/core';
@@ -25,6 +26,8 @@ export class MenuBar {
   private readonly elementRef = inject(ElementRef<HTMLElement>);
 
   readonly openMenu = signal<MenuId | null>(null);
+  readonly newRequested = output<void>();
+  readonly saveRequested = output<void>();
   private readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
 
   toggleMenu(id: MenuId): void {
@@ -52,8 +55,8 @@ export class MenuBar {
   }
 
   onNew(): void {
-    this.canvasDoc.newDocument();
     this.closeMenu();
+    this.newRequested.emit();
   }
 
   onOpenClick(): void {
@@ -76,7 +79,7 @@ export class MenuBar {
   }
 
   onSave(): void {
-    this.canvasDoc.saveImage();
     this.closeMenu();
+    this.saveRequested.emit();
   }
 }

@@ -30,8 +30,17 @@ export interface TextDraft {
   color: string;
 }
 
+export interface NewImageOptions {
+  width: number;
+  height: number;
+  fillColor: string;
+}
+
 export const DEFAULT_CANVAS_WIDTH = 1280;
 export const DEFAULT_CANVAS_HEIGHT = 1024;
+export const MIN_CANVAS_SIZE = 1;
+export const MAX_CANVAS_SIZE = 8192;
+export const TRANSPARENT_COLOR = 'transparent';
 export const DEFAULT_TEXT_FONT_FAMILY = 'Segoe UI, Arial, sans-serif';
 export const DEFAULT_TEXT_FONT_SIZE = 24;
 
@@ -50,17 +59,17 @@ export const TOOL_DEFINITIONS: readonly ToolDefinition[] = [
 
 export const PRESET_COLORS: readonly string[] = [
   '#000000',
-  '#7f7f7f',
-  '#880015',
   '#ed1c24',
+  '#3f48d1',
+  '#23cc56',
+  '#dcff15',
   '#ff7f27',
-  '#fff200',
-  '#22b14c',
-  '#00a2e8',
-  '#3f48cc',
-  '#a349a4',
   '#ffffff',
-  '#b97a57',
+  '#880015',
+  '#131174',
+  '#0e5724',
+  '#635e05',
+  '#914218ff',
 ];
 
 export function getToolDefinition(id: ToolId): ToolDefinition {

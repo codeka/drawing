@@ -5,17 +5,17 @@ import { EditorStateService } from '../../core/editor-state.service';
 import {
   MAX_BRUSH_SIZE,
   MIN_BRUSH_SIZE,
-  PRESET_COLORS,
   SLIDER_MAX_BRUSH_SIZE,
   TOOL_DEFINITIONS,
   ToolId,
 } from '../../models/tool.model';
+import { ColorPicker } from '../color-picker/color-picker';
 
 type BrushToolId = 'pencil' | 'eraser';
 
 @Component({
   selector: 'app-toolbar',
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, ColorPicker],
   templateUrl: './toolbar.html',
   styleUrl: './toolbar.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,7 +25,6 @@ export class Toolbar {
   private readonly canvasDoc = inject(CanvasDocumentService);
 
   readonly tools = TOOL_DEFINITIONS;
-  readonly presetColors = PRESET_COLORS;
   readonly minBrushSize = MIN_BRUSH_SIZE;
   readonly maxBrushSize = MAX_BRUSH_SIZE;
   readonly sliderMaxBrushSize = SLIDER_MAX_BRUSH_SIZE;
@@ -36,11 +35,6 @@ export class Toolbar {
 
   selectColor(color: string): void {
     this.editorState.setForegroundColor(color);
-  }
-
-  onColorInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    this.editorState.setForegroundColor(value);
   }
 
   sliderValue(size: number): number {

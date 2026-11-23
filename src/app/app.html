@@ -1,5 +1,8 @@
 <div class="app-shell">
-  <app-menu-bar />
+  <app-menu-bar
+    (newRequested)="openNewImageDialog()"
+    (saveRequested)="openSaveImageDialog()"
+  />
   <app-toolbar />
   <app-drawing-canvas class="workspace-host" />
   <footer class="status-bar" aria-label="Canvas status">
@@ -24,4 +27,23 @@
       }
     </div>
   </footer>
+
+  @switch (activeDialog()) {
+    @case ('new') {
+      <app-new-image-dialog
+        [initialWidth]="editorState.canvasWidth()"
+        [initialHeight]="editorState.canvasHeight()"
+        [initialFillColor]="lastNewFillColor()"
+        (create)="onCreateNewImage($event)"
+        (cancel)="closeDialog()"
+      />
+    }
+    @case ('save') {
+      <app-save-image-dialog
+        [initialFileName]="editorState.fileName()"
+        (save)="onSaveImage($event)"
+        (cancel)="closeDialog()"
+      />
+    }
+  }
 </div>

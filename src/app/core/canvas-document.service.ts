@@ -2,10 +2,21 @@ import { inject, Injectable } from '@angular/core';
 import {
   DEFAULT_CANVAS_HEIGHT,
   DEFAULT_CANVAS_WIDTH,
+  MAX_CANVAS_SIZE,
+  MIN_CANVAS_SIZE,
   ToolId,
+  TRANSPARENT_COLOR,
 } from '../models/tool.model';
 import { bakeTextToCanvas } from '../tools/text-renderer';
 import { EditorStateService } from './editor-state.service';
+import { DEFAULT_FILE_NAME, extractFileBaseName, normalizePngFileName } from './file-name';
+
+function clampCanvasSize(value: number, fallback: number): number {
+  if (!Number.isFinite(value)) {
+    return fallback;
+  }
+  return Math.max(MIN_CANVAS_SIZE, Math.min(MAX_CANVAS_SIZE, Math.round(value)));
+}
 
 @Injectable({
   providedIn: 'root',
@@ -55,17 +66,29 @@ export class CanvasDocumentService {
   newDocument(
     width: number = DEFAULT_CANVAS_WIDTH,
     height: number = DEFAULT_CANVAS_HEIGHT,
+    fillColor: string = TRANSPARENT_COLOR,
   ): void {
+    const safeWidth = clampCanvasSize(width, DEFAULT_CANVAS_WIDTH);
+    const safeHeight = clampCanvasSize(height, DEFAULT_CANVAS_HEIGHT);
+
     this.cancelActiveEdit();
+    this.editorState.cursorPos.set(null);
+
     if (this.canvas) {
-      this.canvas.width = width;
-      this.canvas.height = height;
+      this.canvas.width = safeWidth;
+      this.canvas.height = safeHeight;
     }
     if (this.ctx) {
-      this.ctx.clearRect(0, 0, width, height);
+      this.ctx.clearRect(0, 0, safeWidth, safeHeight);
+      if (fillColor && fillColor.toLowerCase() !== TRANSPARENT_COLOR) {
+        this.ctx.save();
+        this.ctx.fillStyle = fillColor;
+        this.ctx.fillRect(0, 0, safeWidth, safeHeight);
+        this.ctx.restore();
+      }
     }
-    this.editorState.canvasWidth.set(width);
-    this.editorState.canvasHeight.set(height);
+    this.editorState.canvasWidth.set(safeWidth);
+    this.editorState.canvasHeight.set(safeHeight);
     this.editorState.fileName.set('untitled.png');
   }
 
@@ -103,15 +126,19 @@ export class CanvasDocumentService {
     }
   }
 
-  saveImage(): void {
+  saveImage(fileName?: string): void {
     this.commitActiveEdit();
     if (!this.canvas) {
       return;
     }
 
-    const rawName = this.editorState.fileName().trim() || 'untitled.png';
-    const baseName = rawName.replace(/\.[^/.]+$/, '') || 'untitled';
-    const downloadName = `${baseName}.png`;
+    const downloadName =
+      fileName !== undefined
+        ? (normalizePngFileName(fileName) ?? DEFAULT_FILE_NAME)
+        : (normalizePngFileName(extractFileBaseName(this.editorState.fileName())) ??
+          DEFAULT_FILE_NAME);
+
+    this.editorState.fileName.set(downloadName);
 
     this.canvas.toBlob((blob) => {
       if (!blob) {

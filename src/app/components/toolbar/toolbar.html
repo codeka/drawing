@@ -137,32 +137,11 @@
 
   <div class="toolbar-group colors-group">
     <div class="group-content">
-      <div class="color-controls">
-        <label class="active-color-picker" title="Custom color">
-          <span class="active-swatch" [style.background-color]="editorState.foregroundColor()"></span>
-          <input
-            type="color"
-            class="color-native-input"
-            [value]="editorState.foregroundColor()"
-            (input)="onColorInput($event)"
-            aria-label="Custom foreground color"
-          />
-        </label>
-
-        <div class="color-grid" role="group" aria-label="Preset colors">
-          @for (color of presetColors; track color) {
-            <button
-              type="button"
-              class="color-swatch"
-              [class.active]="editorState.foregroundColor().toLowerCase() === color.toLowerCase()"
-              [style.background-color]="color"
-              [attr.aria-label]="'Select color ' + color"
-              [title]="color"
-              (click)="selectColor(color)"
-            ></button>
-          }
-        </div>
-      </div>
+      <app-color-picker
+        [color]="editorState.foregroundColor()"
+        customColorLabel="Custom foreground color"
+        (colorChange)="selectColor($event)"
+      />
     </div>
     <span class="group-label">Colors</span>
   </div>
