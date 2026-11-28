@@ -671,4 +671,87 @@ describe('App', () => {
       'poster',
     );
   });
+
+  it('opens pasted clipboard image immediately when clean and prompts confirmation when unsaved changes exist', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const editorState = TestBed.inject(EditorStateService);
+    const canvasDoc = TestBed.inject(CanvasDocumentService);
+    const openSpy = vi.spyOn(canvasDoc, 'openImageFile').mockResolvedValue();
+
+    const makePasteEvent = (file: File | null) => {
+      const event = new Event('paste', { cancelable: true }) as ClipboardEvent;
+      Object.defineProperty(event, 'clipboardData', {
+        value: {
+          items: file
+            ? [{ kind: 'file', type: file.type, getAsFile: () => file }]
+            : [],
+          files: file ? [file] : [],
+        },
+      });
+      return event;
+    };
+
+    const imageFile = new File(['png'], 'pasted.png', { type: 'image/png' });
+
+    // 1. Clean document: pastes immediately without confirmation
+    window.dispatchEvent(makePasteEvent(imageFile));
+    fixture.detectChanges();
+    expect(openSpy).toHaveBeenCalledWith(imageFile);
+    expect(compiled.querySelector('app-confirm-dialog')).toBeNull();
+
+    openSpy.mockClear();
+
+    // 2. Dirty document: opens confirmation dialog, Cancel aborts, Replace opens
+    editorState.markDirty();
+    window.dispatchEvent(makePasteEvent(imageFile));
+    fixture.detectChanges();
+
+    expect(openSpy).not.toHaveBeenCalled();
+    expect(compiled.querySelector('app-confirm-dialog')).toBeTruthy();
+
+    const cancelBtn = Array.from(compiled.querySelectorAll('app-confirm-dialog .dialog-btn')).find(
+      (btn) => btn.textContent?.trim() === 'Cancel',
+    ) as HTMLButtonElement;
+    cancelBtn.click();
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('app-confirm-dialog')).toBeNull();
+    expect(openSpy).not.toHaveBeenCalled();
+
+    window.dispatchEvent(makePasteEvent(imageFile));
+    fixture.detectChanges();
+    const replaceBtn = compiled.querySelector(
+      'app-confirm-dialog .dialog-btn.primary',
+    ) as HTMLButtonElement;
+    replaceBtn.click();
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('app-confirm-dialog')).toBeNull();
+    expect(openSpy).toHaveBeenCalledWith(imageFile);
+
+    openSpy.mockClear();
+
+    // 3. After saving, dirty is cleared so next paste opens immediately without prompt
+    canvasDoc.saveImage('saved');
+    window.dispatchEvent(makePasteEvent(imageFile));
+    fixture.detectChanges();
+    expect(compiled.querySelector('app-confirm-dialog')).toBeNull();
+    expect(openSpy).toHaveBeenCalledWith(imageFile);
+
+    openSpy.mockClear();
+
+    // 4. Non-image paste or paste inside a text input is ignored
+    const textOnlyEvent = makePasteEvent(null);
+    window.dispatchEvent(textOnlyEvent);
+    expect(openSpy).not.toHaveBeenCalled();
+
+    const numberInput = compiled.querySelector('.size-number-input') as HTMLInputElement;
+    const inputPaste = makePasteEvent(imageFile);
+    numberInput.dispatchEvent(inputPaste);
+    expect(openSpy).not.toHaveBeenCalled();
+  });
 });

@@ -257,6 +257,7 @@ export class DrawingCanvas {
       commitShapeDraft: () => this.canvasDoc.commitActiveEdit(),
       setShapeSelectionPreview: (rect) => this.editorState.shapeSelectionPreview.set(rect),
       setLinePreview: (line) => this.editorState.linePreview.set(line),
+      markDirty: () => this.editorState.markDirty(),
     };
   }
 }

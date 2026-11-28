@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ConfirmDialog } from './components/confirm-dialog/confirm-dialog';
 import { DrawingCanvas } from './components/drawing-canvas/drawing-canvas';
 import { MenuBar } from './components/menu-bar/menu-bar';
 import { NewImageDialog } from './components/new-image-dialog/new-image-dialog';
@@ -8,7 +9,7 @@ import { CanvasDocumentService } from './core/canvas-document.service';
 import { EditorStateService } from './core/editor-state.service';
 import { NewImageOptions, ToolId, TRANSPARENT_COLOR } from './models/tool.model';
 
-type ActiveDialog = 'new' | 'save' | null;
+type ActiveDialog = 'new' | 'save' | 'paste-confirm' | null;
 
 const TOOL_SHORTCUTS: Record<string, ToolId> = {
   p: 'pencil',
@@ -21,12 +22,13 @@ const TOOL_SHORTCUTS: Record<string, ToolId> = {
 
 @Component({
   selector: 'app-root',
-  imports: [MenuBar, Toolbar, DrawingCanvas, NewImageDialog, SaveImageDialog],
+  imports: [MenuBar, Toolbar, DrawingCanvas, NewImageDialog, SaveImageDialog, ConfirmDialog],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '(window:keydown)': 'onKeyDown($event)',
+    '(window:paste)': 'onPaste($event)',
   },
 })
 export class App {
@@ -35,6 +37,7 @@ export class App {
 
   readonly activeDialog = signal<ActiveDialog>(null);
   readonly lastNewFillColor = signal<string>(TRANSPARENT_COLOR);
+  readonly pendingPasteFile = signal<File | null>(null);
 
   openNewImageDialog(): void {
     this.activeDialog.set('new');
@@ -45,7 +48,42 @@ export class App {
   }
 
   closeDialog(): void {
+    this.pendingPasteFile.set(null);
     this.activeDialog.set(null);
+  }
+
+  onConfirmPaste(): void {
+    const file = this.pendingPasteFile();
+    this.pendingPasteFile.set(null);
+    this.activeDialog.set(null);
+    if (file) {
+      void this.openPastedImage(file);
+    }
+  }
+
+  onPaste(event: ClipboardEvent): void {
+    if (this.activeDialog() !== null) {
+      return;
+    }
+
+    const target = event.target as HTMLElement | null;
+    if (this.isTextInputElement(target)) {
+      return;
+    }
+
+    const file = this.extractClipboardImageFile(event.clipboardData);
+    if (!file) {
+      return;
+    }
+
+    event.preventDefault();
+    if (this.canvasDoc.hasUnsavedWork()) {
+      this.pendingPasteFile.set(file);
+      this.activeDialog.set('paste-confirm');
+      return;
+    }
+
+    void this.openPastedImage(file);
   }
 
   onCreateNewImage(options: NewImageOptions): void {
@@ -69,13 +107,7 @@ export class App {
     }
 
     const target = event.target as HTMLElement | null;
-    if (
-      target &&
-      (target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.tagName === 'SELECT' ||
-        target.isContentEditable)
-    ) {
+    if (this.isTextInputElement(target)) {
       return;
     }
 
@@ -96,6 +128,51 @@ export class App {
     if (toolId) {
       event.preventDefault();
       this.canvasDoc.selectTool(toolId);
+    }
+  }
+
+  private isTextInputElement(target: HTMLElement | null): boolean {
+    return Boolean(
+      target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable),
+    );
+  }
+
+  private extractClipboardImageFile(clipboardData: DataTransfer | null): File | null {
+    if (!clipboardData) {
+      return null;
+    }
+
+    if (clipboardData.items) {
+      for (const item of Array.from(clipboardData.items)) {
+        if (item.kind === 'file' && item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) {
+            return file;
+          }
+        }
+      }
+    }
+
+    if (clipboardData.files) {
+      for (const file of Array.from(clipboardData.files)) {
+        if (file.type.startsWith('image/')) {
+          return file;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private async openPastedImage(file: File): Promise<void> {
+    try {
+      await this.canvasDoc.openImageFile(file);
+    } catch (error) {
+      console.error('Failed to paste image:', error);
     }
   }
 }

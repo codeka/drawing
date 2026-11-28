@@ -45,5 +45,15 @@
         (cancel)="closeDialog()"
       />
     }
+    @case ('paste-confirm') {
+      <app-confirm-dialog
+        title="Replace Current Image?"
+        message="You have unsaved changes to the current image. Pasting a new image will replace it."
+        confirmLabel="Replace"
+        cancelLabel="Cancel"
+        (confirm)="onConfirmPaste()"
+        (cancel)="closeDialog()"
+      />
+    }
   }
 </div>

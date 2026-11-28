@@ -120,6 +120,7 @@ export class ShapesTool implements DrawingTool {
 
     if (toolCtx.shapeInstant) {
       renderShapeToCanvas(toolCtx.ctx, draft);
+      toolCtx.markDirty?.();
     } else {
       toolCtx.setShapeDraft(draft);
     }

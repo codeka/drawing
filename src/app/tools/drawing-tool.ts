@@ -39,6 +39,7 @@ export interface ToolContext {
   commitShapeDraft(): void;
   setShapeSelectionPreview(rect: Rect | null): void;
   setLinePreview(line: LineDraft | null): void;
+  markDirty?(): void;
 }
 
 export interface DrawingTool {

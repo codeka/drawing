@@ -11,6 +11,7 @@ export class EraserTool implements DrawingTool {
     this.isErasing = true;
     this.lastPoint = point;
     eraseCircleStampLine(toolCtx.ctx, point, point, toolCtx.eraserSize);
+    toolCtx.markDirty?.();
   }
 
   onPointerMove(point: Point, toolCtx: ToolContext): void {

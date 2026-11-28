@@ -180,6 +180,12 @@ describe('EditorStateService', () => {
     service.setShapeInstant(false);
     expect(service.shapeInstant()).toBe(false);
 
+    expect(service.hasUnsavedChanges()).toBe(false);
+    service.markDirty();
+    expect(service.hasUnsavedChanges()).toBe(true);
+    service.clearDirty();
+    expect(service.hasUnsavedChanges()).toBe(false);
+
     service.setLineWidth(0);
     expect(service.lineWidth()).toBe(MIN_BRUSH_SIZE);
     service.setLineWidth(999);

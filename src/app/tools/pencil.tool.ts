@@ -11,6 +11,7 @@ export class PencilTool implements DrawingTool {
     this.isDrawing = true;
     this.lastPoint = point;
     drawCircleStampLine(toolCtx.ctx, point, point, toolCtx.pencilSize, toolCtx.color);
+    toolCtx.markDirty?.();
   }
 
   onPointerMove(point: Point, toolCtx: ToolContext): void {

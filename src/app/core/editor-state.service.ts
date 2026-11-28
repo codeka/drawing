@@ -73,6 +73,7 @@ export class EditorStateService {
   readonly canvasWidth = signal<number>(DEFAULT_CANVAS_WIDTH);
   readonly canvasHeight = signal<number>(DEFAULT_CANVAS_HEIGHT);
   readonly fileName = signal<string>('untitled.png');
+  readonly hasUnsavedChanges = signal<boolean>(false);
   readonly cursorPos = signal<Point | null>(null);
   readonly activeTextDraft = signal<TextDraft | null>(null);
   readonly textSelectionPreview = signal<Rect | null>(null);
@@ -239,5 +240,13 @@ export class EditorStateService {
 
   clearTextDraft(): void {
     this.activeTextDraft.set(null);
+  }
+
+  markDirty(): void {
+    this.hasUnsavedChanges.set(true);
+  }
+
+  clearDirty(): void {
+    this.hasUnsavedChanges.set(false);
   }
 }

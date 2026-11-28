@@ -31,6 +31,7 @@ export class LineTool implements DrawingTool {
     this.startPoint = null;
     toolCtx.setLinePreview(null);
     renderLineToCanvas(toolCtx.ctx, line);
+    toolCtx.markDirty?.();
   }
 
   onDeactivate(toolCtx: ToolContext): void {

@@ -66,6 +66,7 @@ function createToolContext(overrides: Partial<ToolContext> = {}): {
     }),
     setShapeSelectionPreview: vi.fn(),
     setLinePreview: vi.fn(),
+    markDirty: vi.fn(),
     ...overrides,
   };
 
@@ -156,5 +157,6 @@ describe('ShapesTool', () => {
     expect(getCapturedDraft()).toBeNull();
     expect(canvasCtx.fill).toHaveBeenCalledTimes(1);
     expect(canvasCtx.stroke).toHaveBeenCalledTimes(1);
+    expect(ctx.markDirty).toHaveBeenCalledTimes(1);
   });
 });

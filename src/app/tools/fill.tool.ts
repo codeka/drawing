@@ -16,6 +16,7 @@ export class FillTool implements DrawingTool {
     const fillRgba = parseHexColor(toolCtx.color);
     if (floodFill(imageData, x, y, fillRgba)) {
       toolCtx.ctx.putImageData(imageData, 0, 0);
+      toolCtx.markDirty?.();
     }
   }
 

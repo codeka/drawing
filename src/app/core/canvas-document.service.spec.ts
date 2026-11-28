@@ -255,4 +255,37 @@ describe('CanvasDocumentService', () => {
     expect(editorState.activeShapeDraft()).toBeNull();
     expect(mockCtx.stroke).toHaveBeenCalledTimes(1);
   });
+
+  it('tracks hasUnsavedWork across edits, saveImage, and newDocument', () => {
+    expect(service.hasUnsavedWork()).toBe(false);
+
+    editorState.markDirty();
+    expect(service.hasUnsavedWork()).toBe(true);
+
+    service.newDocument(320, 240);
+    expect(service.hasUnsavedWork()).toBe(false);
+
+    editorState.activeTextDraft.set({
+      rect: { x: 0, y: 0, width: 100, height: 40 },
+      text: '',
+      fontFamily: 'Segoe UI',
+      fontSize: 20,
+      bold: false,
+      italic: false,
+      underline: false,
+      color: '#000000',
+    });
+    expect(service.hasUnsavedWork()).toBe(false);
+
+    editorState.updateTextDraft({ text: 'Hi' });
+    expect(service.hasUnsavedWork()).toBe(true);
+
+    service.commitActiveEdit();
+    expect(editorState.hasUnsavedChanges()).toBe(true);
+    expect(service.hasUnsavedWork()).toBe(true);
+
+    service.saveImage('saved');
+    expect(editorState.hasUnsavedChanges()).toBe(false);
+    expect(service.hasUnsavedWork()).toBe(false);
+  });
 });

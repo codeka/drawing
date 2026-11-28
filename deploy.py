@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -15,7 +16,10 @@ ROOT = Path(__file__).resolve().parent
 NG_CLI_JS = ROOT / "node_modules" / "@angular" / "cli" / "bin" / "ng.js"
 BUILD_DIR = ROOT / "dist" / "drawing" / "browser"
 DEFAULT_ZIP_PATH = ROOT / "dist" / "draw-deploy.zip"
+DEFAULT_SERVER = "web@draw.codeka.com"
 DEFAULT_REMOTE_PATH = "/home/web/draw-deploy.zip"
+DEFAULT_WEB_DIR = "/home/web/draw"
+DEFAULT_RELOAD_COMMAND = "sudo systemctl reload nginx"
 
 
 def find_node_executable() -> str:
@@ -145,15 +149,49 @@ def upload_zip(
         raise RuntimeError(f"scp upload failed with exit code {result.returncode}.")
 
 
+def run_remote_command(
+    server: str,
+    command: str,
+    port: int | None = None,
+    identity: Path | None = None,
+) -> None:
+    """Execute a remote command over ssh."""
+    ssh_exe = shutil.which("ssh")
+    if not ssh_exe:
+        raise RuntimeError("Could not find 'ssh' on PATH.")
+
+    resolved_identity = identity.resolve() if identity is not None else None
+    cmd = [ssh_exe]
+    if port is not None:
+        cmd.extend(["-p", str(port)])
+    if resolved_identity is not None:
+        cmd.extend(["-i", str(resolved_identity)])
+    cmd.extend(["--", server, command])
+
+    result = subprocess.run(cmd, cwd=str(ROOT), check=False)
+    if result.returncode != 0:
+        raise RuntimeError(f"ssh command failed with exit code {result.returncode}.")
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the command-line argument parser."""
     parser = argparse.ArgumentParser(
-        description="Build the Angular release bundle, zip it, and optionally upload it via scp.",
+        description="Build the Angular release bundle, zip it, upload it via scp, and restart the service.",
     )
     parser.add_argument(
         "--server",
-        default=None,
-        help="SSH target to upload the zip to (e.g. web@draw.codeka.com).",
+        default=DEFAULT_SERVER,
+        help=f"SSH target to upload the zip to (default: {DEFAULT_SERVER}).",
+    )
+    parser.add_argument(
+        "--no-upload",
+        action="store_true",
+        help="Build and package the zip locally without uploading or restarting.",
+    )
+    parser.add_argument(
+        "--no-restart",
+        action="store_true",
+        help="Upload the zip without restarting the remote service.",
     )
     parser.add_argument(
         "--remote-path",
@@ -195,13 +233,15 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        server = validate_server(args.server) if args.server is not None else None
+        server = None if args.no_upload else validate_server(args.server)
         remote_path = args.remote_path.strip()
         if server is not None:
             if not remote_path:
                 raise ValueError("--remote-path cannot be empty.")
             if not shutil.which("scp"):
                 raise RuntimeError("Could not find 'scp' on PATH.")
+            if not args.no_restart and not shutil.which("ssh"):
+                raise RuntimeError("Could not find 'ssh' on PATH.")
 
         if args.port is not None and not (1 <= args.port <= 65535):
             raise ValueError("--port must be between 1 and 65535.")
@@ -236,9 +276,23 @@ def main(argv: list[str] | None = None) -> int:
                 port=args.port,
                 identity=identity,
             )
+            if not args.no_restart:
+                remote_cmd = (
+                    f"mkdir -p {shlex.quote(DEFAULT_WEB_DIR)} && "
+                    f"rm -rf {shlex.quote(DEFAULT_WEB_DIR)}/* && "
+                    f"unzip -oq {shlex.quote(remote_path)} -d {shlex.quote(DEFAULT_WEB_DIR)} && "
+                    f"{DEFAULT_RELOAD_COMMAND}"
+                )
+                print(f"Extracting to {DEFAULT_WEB_DIR} and reloading nginx...", flush=True)
+                run_remote_command(
+                    server=server,
+                    command=remote_cmd,
+                    port=args.port,
+                    identity=identity,
+                )
             print(f"Deploy complete: {server}:{remote_path}", flush=True)
         else:
-            print("No --server specified; skipped upload.", flush=True)
+            print("Skipping upload (--no-upload).", flush=True)
 
         return 0
     except KeyboardInterrupt:

@@ -64,6 +64,7 @@ function createToolContext(overrides: Partial<ToolContext> = {}): {
     setLinePreview: (line) => {
       linePreview = line;
     },
+    markDirty: vi.fn(),
     ...overrides,
   };
 
@@ -97,6 +98,7 @@ describe('LineTool', () => {
     expect(getPreview()).toBeNull();
     expect(canvasCtx.stroke).toHaveBeenCalledTimes(1);
     expect(canvasCtx.fill).toHaveBeenCalledTimes(2);
+    expect(ctx.markDirty).toHaveBeenCalledTimes(1);
   });
 
   it('snaps angle to 45-degree increments when shiftKey is held and clears preview on deactivate', () => {

@@ -59,6 +59,9 @@ export class CanvasDocumentService {
       if (this.ctx) {
         bakeTextToCanvas(this.ctx, textDraft);
       }
+      if (textDraft.text.length > 0) {
+        this.editorState.markDirty();
+      }
       this.editorState.clearTextDraft();
     }
 
@@ -67,8 +70,17 @@ export class CanvasDocumentService {
       if (this.ctx) {
         renderShapeToCanvas(this.ctx, shapeDraft);
       }
+      this.editorState.markDirty();
       this.editorState.clearShapeDraft();
     }
+  }
+
+  hasUnsavedWork(): boolean {
+    return (
+      this.editorState.hasUnsavedChanges() ||
+      (this.editorState.activeTextDraft()?.text.length ?? 0) > 0 ||
+      this.editorState.activeShapeDraft() !== null
+    );
   }
 
   cancelActiveEdit(): void {
@@ -106,6 +118,7 @@ export class CanvasDocumentService {
     this.editorState.canvasWidth.set(safeWidth);
     this.editorState.canvasHeight.set(safeHeight);
     this.editorState.fileName.set('untitled.png');
+    this.editorState.clearDirty();
   }
 
   async openImageFile(file: File): Promise<void> {
@@ -137,6 +150,7 @@ export class CanvasDocumentService {
       this.editorState.canvasWidth.set(width);
       this.editorState.canvasHeight.set(height);
       this.editorState.fileName.set(file.name || 'image.png');
+      this.editorState.clearDirty();
     } finally {
       URL.revokeObjectURL(url);
     }
@@ -155,6 +169,7 @@ export class CanvasDocumentService {
           DEFAULT_FILE_NAME);
 
     this.editorState.fileName.set(downloadName);
+    this.editorState.clearDirty();
 
     this.canvas.toBlob((blob) => {
       if (!blob) {
