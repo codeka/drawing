@@ -11,6 +11,11 @@ import { NewImageOptions, ToolId, TRANSPARENT_COLOR } from './models/tool.model'
 
 type ActiveDialog = 'new' | 'save' | 'paste-confirm' | null;
 
+interface StatusMessage {
+  text: string;
+  kind: 'success' | 'error';
+}
+
 const TOOL_SHORTCUTS: Record<string, ToolId> = {
   p: 'pencil',
   f: 'fill',
@@ -38,6 +43,8 @@ export class App {
   readonly activeDialog = signal<ActiveDialog>(null);
   readonly lastNewFillColor = signal<string>(TRANSPARENT_COLOR);
   readonly pendingPasteFile = signal<File | null>(null);
+  readonly statusMessage = signal<StatusMessage | null>(null);
+  private statusTimer: ReturnType<typeof setTimeout> | null = null;
 
   openNewImageDialog(): void {
     this.activeDialog.set('new');
@@ -77,13 +84,49 @@ export class App {
     }
 
     event.preventDefault();
-    if (this.canvasDoc.hasUnsavedWork()) {
-      this.pendingPasteFile.set(file);
-      this.activeDialog.set('paste-confirm');
+    this.handlePastedImageFile(file);
+  }
+
+  async onCopyRequested(): Promise<void> {
+    try {
+      await this.canvasDoc.copyImage();
+      this.showStatusMessage('Copied image to clipboard', 'success');
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : 'Failed to copy image to clipboard.';
+      this.showStatusMessage(message, 'error');
+    }
+  }
+
+  async onPasteRequested(): Promise<void> {
+    if (!navigator.clipboard?.read) {
+      this.showStatusMessage('Clipboard paste is not supported here. Try Ctrl+V.', 'error');
       return;
     }
 
-    void this.openPastedImage(file);
+    try {
+      const items = await navigator.clipboard.read();
+      for (const item of items) {
+        const imageType =
+          item.types.find((type) => type === 'image/png') ??
+          item.types.find((type) => type.startsWith('image/'));
+        if (!imageType) {
+          continue;
+        }
+        const blob = await item.getType(imageType);
+        const ext = imageType.split('/')[1]?.split('+')[0] || 'png';
+        const file = new File([blob], `image.${ext === 'jpeg' ? 'jpg' : ext}`, {
+          type: imageType,
+        });
+        this.handlePastedImageFile(file);
+        return;
+      }
+      this.showStatusMessage('No image found in clipboard.', 'error');
+    } catch {
+      this.showStatusMessage('Unable to read clipboard. Try pressing Ctrl+V.', 'error');
+    }
   }
 
   onCreateNewImage(options: NewImageOptions): void {
@@ -102,11 +145,25 @@ export class App {
       return;
     }
 
+    const target = event.target as HTMLElement | null;
+    if (
+      (event.ctrlKey || event.metaKey) &&
+      !event.altKey &&
+      !event.shiftKey &&
+      event.key.toLowerCase() === 'c'
+    ) {
+      if (this.isTextInputElement(target)) {
+        return;
+      }
+      event.preventDefault();
+      void this.onCopyRequested();
+      return;
+    }
+
     if (event.ctrlKey || event.metaKey || event.altKey) {
       return;
     }
 
-    const target = event.target as HTMLElement | null;
     if (this.isTextInputElement(target)) {
       return;
     }
@@ -168,11 +225,33 @@ export class App {
     return null;
   }
 
+  private handlePastedImageFile(file: File): void {
+    if (this.canvasDoc.hasUnsavedWork()) {
+      this.pendingPasteFile.set(file);
+      this.activeDialog.set('paste-confirm');
+      return;
+    }
+
+    void this.openPastedImage(file);
+  }
+
+  private showStatusMessage(text: string, kind: 'success' | 'error'): void {
+    if (this.statusTimer !== null) {
+      clearTimeout(this.statusTimer);
+    }
+    this.statusMessage.set({ text, kind });
+    this.statusTimer = setTimeout(() => {
+      this.statusMessage.set(null);
+      this.statusTimer = null;
+    }, 4000);
+  }
+
   private async openPastedImage(file: File): Promise<void> {
     try {
       await this.canvasDoc.openImageFile(file);
     } catch (error) {
       console.error('Failed to paste image:', error);
+      this.showStatusMessage('Failed to paste image from clipboard.', 'error');
     }
   }
 }

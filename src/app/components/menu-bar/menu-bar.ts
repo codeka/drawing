@@ -28,6 +28,8 @@ export class MenuBar {
   readonly openMenu = signal<MenuId | null>(null);
   readonly newRequested = output<void>();
   readonly saveRequested = output<void>();
+  readonly copyRequested = output<void>();
+  readonly pasteRequested = output<void>();
   private readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
 
   toggleMenu(id: MenuId): void {
@@ -81,5 +83,15 @@ export class MenuBar {
   onSave(): void {
     this.closeMenu();
     this.saveRequested.emit();
+  }
+
+  onCopy(): void {
+    this.closeMenu();
+    this.copyRequested.emit();
+  }
+
+  onPaste(): void {
+    this.closeMenu();
+    this.pasteRequested.emit();
   }
 }

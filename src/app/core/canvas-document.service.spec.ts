@@ -288,4 +288,51 @@ describe('CanvasDocumentService', () => {
     expect(editorState.hasUnsavedChanges()).toBe(false);
     expect(service.hasUnsavedWork()).toBe(false);
   });
+
+  it('copies canvas image to clipboard as PNG and throws when Clipboard API is unavailable', async () => {
+    const originalClipboard = navigator.clipboard;
+    const originalClipboardItem = (globalThis as { ClipboardItem?: typeof ClipboardItem })
+      .ClipboardItem;
+
+    const writeMock = vi.fn().mockResolvedValue(undefined);
+    class MockClipboardItem {
+      constructor(public readonly items: Record<string, Blob>) {}
+    }
+
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { write: writeMock },
+    });
+    Object.defineProperty(globalThis, 'ClipboardItem', {
+      configurable: true,
+      writable: true,
+      value: MockClipboardItem,
+    });
+
+    try {
+      await service.copyImage();
+      expect(writeMock).toHaveBeenCalledTimes(1);
+      const [items] = writeMock.mock.calls[0];
+      expect(items).toHaveLength(1);
+      expect(items[0].items['image/png']).toBeInstanceOf(Blob);
+
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: {},
+      });
+      await expect(service.copyImage()).rejects.toThrow(
+        'Clipboard image copy is not supported in this browser.',
+      );
+    } finally {
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: originalClipboard,
+      });
+      Object.defineProperty(globalThis, 'ClipboardItem', {
+        configurable: true,
+        writable: true,
+        value: originalClipboardItem,
+      });
+    }
+  });
 });

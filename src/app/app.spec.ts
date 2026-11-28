@@ -754,4 +754,90 @@ describe('App', () => {
     numberInput.dispatchEvent(inputPaste);
     expect(openSpy).not.toHaveBeenCalled();
   });
+
+  it('supports Edit -> Copy/Paste, Ctrl+C shortcut, and shows success/error messages in status bar', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const canvasDoc = TestBed.inject(CanvasDocumentService);
+    const copySpy = vi.spyOn(canvasDoc, 'copyImage').mockResolvedValue();
+    const openSpy = vi.spyOn(canvasDoc, 'openImageFile').mockResolvedValue();
+
+    // Open Edit menu and click Copy
+    const editTrigger = Array.from(compiled.querySelectorAll('.menu-trigger')).find(
+      (el) => el.textContent?.trim() === 'Edit',
+    ) as HTMLButtonElement;
+    editTrigger.click();
+    fixture.detectChanges();
+
+    const menuItems = Array.from(compiled.querySelectorAll('.menu-action')) as HTMLButtonElement[];
+    const copyItem = menuItems.find((el) => el.textContent?.includes('Copy'))!;
+    const pasteItem = menuItems.find((el) => el.textContent?.includes('Paste'))!;
+    expect(copyItem).toBeTruthy();
+    expect(pasteItem).toBeTruthy();
+
+    copyItem.click();
+    await Promise.resolve();
+    fixture.detectChanges();
+
+    expect(copySpy).toHaveBeenCalledTimes(1);
+    const statusMsg = compiled.querySelector('.status-message') as HTMLElement;
+    expect(statusMsg).toBeTruthy();
+    expect(statusMsg.classList.contains('success')).toBe(true);
+    expect(statusMsg.textContent?.trim()).toBe('Copied image to clipboard');
+
+    // Ctrl+C failure shows error message
+    copySpy.mockRejectedValueOnce(new Error('Clipboard permission denied'));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'c', ctrlKey: true }));
+    await Promise.resolve();
+    await Promise.resolve();
+    fixture.detectChanges();
+
+    const errStatus = compiled.querySelector('.status-message') as HTMLElement;
+    expect(errStatus.classList.contains('error')).toBe(true);
+    expect(errStatus.textContent?.trim()).toBe('Clipboard permission denied');
+
+    // Ctrl+C inside an input does not trigger canvas copy
+    const numberInput = compiled.querySelector('.size-number-input') as HTMLInputElement;
+    numberInput.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'c', ctrlKey: true, bubbles: true }),
+    );
+    expect(copySpy).toHaveBeenCalledTimes(2);
+
+    // Edit -> Paste reads navigator.clipboard.read()
+    const originalClipboard = navigator.clipboard;
+    const pngBlob = new Blob(['png'], { type: 'image/png' });
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        read: vi.fn().mockResolvedValue([
+          {
+            types: ['image/png'],
+            getType: vi.fn().mockResolvedValue(pngBlob),
+          },
+        ]),
+      },
+    });
+
+    try {
+      editTrigger.click();
+      fixture.detectChanges();
+      const pasteBtn = Array.from(compiled.querySelectorAll('.menu-action')).find((el) =>
+        el.textContent?.includes('Paste'),
+      ) as HTMLButtonElement;
+      pasteBtn.click();
+      await Promise.resolve();
+      await Promise.resolve();
+      fixture.detectChanges();
+
+      expect(openSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: originalClipboard,
+      });
+    }
+  });
 });

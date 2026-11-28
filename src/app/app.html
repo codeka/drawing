@@ -2,6 +2,8 @@
   <app-menu-bar
     (newRequested)="openNewImageDialog()"
     (saveRequested)="openSaveImageDialog()"
+    (copyRequested)="onCopyRequested()"
+    (pasteRequested)="onPasteRequested()"
   />
   <app-toolbar />
   <app-drawing-canvas class="workspace-host" />
@@ -19,6 +21,18 @@
       <span>{{ editorState.fileName() }}</span>
     </div>
     <div class="status-spacer"></div>
+    @if (statusMessage(); as status) {
+      <div
+        class="status-section status-message"
+        [class.success]="status.kind === 'success'"
+        [class.error]="status.kind === 'error'"
+        role="status"
+        aria-live="polite"
+      >
+        <span>{{ status.text }}</span>
+      </div>
+      <div class="status-divider" aria-hidden="true"></div>
+    }
     <div class="status-section status-coords">
       @if (editorState.cursorPos(); as pos) {
         <span>{{ pos.x }}, {{ pos.y }} px</span>

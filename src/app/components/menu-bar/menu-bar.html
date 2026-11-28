@@ -41,8 +41,13 @@
     </button>
     @if (openMenu() === 'edit') {
       <div class="menu-dropdown" role="menu">
-        <button type="button" class="menu-action" role="menuitem" disabled>
-          <span>No items yet</span>
+        <button type="button" class="menu-action" role="menuitem" (click)="onCopy()">
+          <span>Copy</span>
+          <span class="menu-shortcut">Ctrl+C</span>
+        </button>
+        <button type="button" class="menu-action" role="menuitem" (click)="onPaste()">
+          <span>Paste</span>
+          <span class="menu-shortcut">Ctrl+V</span>
         </button>
       </div>
     }

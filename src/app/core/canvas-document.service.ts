@@ -183,4 +183,23 @@ export class CanvasDocumentService {
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }, 'image/png');
   }
+
+  async copyImage(): Promise<void> {
+    this.commitActiveEdit();
+    if (!this.canvas) {
+      throw new Error('Canvas is not ready.');
+    }
+    if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') {
+      throw new Error('Clipboard image copy is not supported in this browser.');
+    }
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      this.canvas!.toBlob((result) => resolve(result), 'image/png'),
+    );
+    if (!blob) {
+      throw new Error('Failed to export canvas image.');
+    }
+
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+  }
 }

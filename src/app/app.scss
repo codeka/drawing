@@ -46,6 +46,18 @@
   flex: 1;
 }
 
+.status-message {
+  font-weight: 500;
+
+  &.success {
+    color: #15803d;
+  }
+
+  &.error {
+    color: #dc2626;
+  }
+}
+
 .status-coords {
   min-width: 96px;
   justify-content: flex-end;
